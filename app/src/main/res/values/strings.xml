@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Winnebago Control</string>
+    <string name="app_label">Winnebago</string>
+    <string name="discover">Discover</string>
+    <string name="protocol">http://</string>
+    <string name="stored_ip_address">storedIpAddress</string>
+    <string name="route_admin">admin</string>
+    <string name="route_network">network</string>
+    <string name="text_view_dialog_enter_ip_address">Enter IP Address</string>
+    <string name="button_dialog_enter_ip_address_accept">Accept</string>
+    <string name="button_dialog_enter_ip_address_cancel">Cancel</string>
+    <string name="ip_address_not_local">The selected IP address must be on the local network!</string>
+</resources>
