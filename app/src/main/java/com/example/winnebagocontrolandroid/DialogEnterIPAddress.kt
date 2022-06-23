@@ -62,8 +62,7 @@ class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activit
         this.cancel()
 
         webView.post(Runnable {
-            val protocol = context.resources.getString(R.string.protocol)
-//            val ipAddress = editTextDialogEnterIPAddress.text!!.toString()
+            val protocol = context.resources.getString(R.string.protocol_http)
             webView.loadUrl("$protocol$ipAddress")
         })
     }

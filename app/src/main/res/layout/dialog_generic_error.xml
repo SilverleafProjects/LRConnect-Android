@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textViewDialogGenericErrorDisplayError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:textSize="20sp"
+        android:layout_margin="20dp"
+        android:textColor="@color/winnie_red" />
+
+    <TextView
+        android:id="@+id/textViewDialogGenericErrorDisplayOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonDialogGenericErrorAccept"
+        android:gravity="center_horizontal"
+        android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/buttonDialogGenericErrorAccept"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:text="@string/button_dialog_generic_error_accept"/>
+
+    <Button
+        android:id="@+id/buttonDialogGenericErrorCancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:text="@string/button_dialog_generic_error_cancel"/>
+
+</RelativeLayout>

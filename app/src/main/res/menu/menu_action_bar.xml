@@ -8,18 +8,22 @@
 <!--    <item android:id="@+id/search" android:icon="@drawable/ic_search" android:title="Search" app:showAsAction="ifRoom">-->
 <!--    </item>-->
 <!--    <item android:id="@+id/action_settings" android:title="@string/action_settings" />-->
-    <item android:id="@+id/main_page" android:title="Main Page">
+    <item android:id="@+id/main_page" android:title="@string/menu_text_main_page">
     </item>
-    <item android:id="@+id/scan_network" android:title="Scan Network">
+    <item android:id="@+id/scan_network" android:title="@string/menu_text_scan_network">
     </item>
-    <item android:id="@+id/enter_ip_address" android:title="Enter IP Address">
+    <item android:id="@+id/enter_ip_address" android:title="@string/menu_text_enter_ip_address">
     </item>
-    <item android:id="@+id/admin" android:title="Admin">
+    <item android:id="@+id/admin_page" android:title="@string/menu_text_admin_page">
     </item>
-    <item android:id="@+id/network" android:title="Network">
+    <item android:id="@+id/network_page" android:title="@string/menu_text_network_page">
     </item>
-    <item android:id="@+id/clear_preferences" android:title="Clear Preferences">
+    <item android:id="@+id/cloud_options" android:title="@string/menu_text_cloud_options">
     </item>
-    <item android:id="@+id/clear_cache" android:title="Clear Cache">
+    <item android:id="@+id/cloud_page" android:title="@string/menu_text_cloud_page">
+    </item>
+    <item android:id="@+id/clear_preferences" android:title="@string/menu_text_clear_preferences">
+    </item>
+    <item android:id="@+id/clear_cache" android:title="@string/menu_text_clear_cache">
     </item>
 </menu>

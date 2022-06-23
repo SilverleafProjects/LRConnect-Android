@@ -41,5 +41,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 	
-	implementation "com.github.andriydruk:rx2dnssd:0.9.16"
+	implementation "com.github.andriydruk:rx2dnssd:0.9.16" // Scan network
+    implementation 'com.squareup.okhttp3:okhttp:3.6.0' // Web sockets.
 }

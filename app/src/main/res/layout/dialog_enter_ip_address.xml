@@ -50,8 +50,4 @@
         android:layout_alignParentEnd="true"
         android:text="@string/button_dialog_enter_ip_address_cancel"/>
 
-
-
-
-
 </RelativeLayout>

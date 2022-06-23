@@ -27,6 +27,16 @@ class Preferences(context: Context) {
         return preferences.getString(key, null)
     }
 
+    fun saveBoolean(key: String, value: Boolean) {
+        val editor: SharedPreferences.Editor = preferences.edit()
+        editor.putBoolean(key, value)
+        editor.commit()
+    }
+
+    fun retrieveBoolean(key: String): Boolean {
+        return preferences.getBoolean(key, false)
+    }
+
     fun deleteValue(key: String) {
         val editor: SharedPreferences.Editor = preferences.edit()
         editor.remove(key)
