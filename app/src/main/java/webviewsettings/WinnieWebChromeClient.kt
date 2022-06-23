@@ -7,7 +7,6 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.ProgressBar
-import androidx.core.app.ActivityCompat.startActivityForResult
 import com.example.winnebagocontrolandroid.MainActivity
 import com.example.winnebagocontrolandroid.MainActivity.Companion.FILE_RESULT_CODE
 import java.lang.Exception

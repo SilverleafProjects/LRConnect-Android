@@ -18,9 +18,6 @@ fun setWebView(webView: WebView, progressBar: ProgressBar, activity: Activity) {
     webView.isVerticalScrollBarEnabled = false
     webView.isHorizontalScrollBarEnabled = false
 
-
-//    var webChromeClient = WebChromeClient()
-//    webView.webChromeClient = webChromeClient
     webView.webViewClient = WinnieWebViewClient()
     webView.webChromeClient = WinnieWebChromeClient(progressBar, activity)
 }

@@ -1,6 +1,5 @@
 package com.example.winnebagocontrolandroid
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -29,14 +28,12 @@ class MainActivity : AppCompatActivity() {
     companion object {
         var ipAddress: String = ""
         var valueCallBack: ValueCallback<Array<Uri>>? = null
-        val FILE_RESULT_CODE: Int = 69
-//        lateinit var activity: Activity
+        const val FILE_RESULT_CODE: Int = 69
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        activity = this
 
         preferences = Preferences(this)
         dialogSide = 9 *  Math.min(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels) / 10
@@ -78,13 +75,11 @@ class MainActivity : AppCompatActivity() {
         when(requestCode) {
             FILE_RESULT_CODE-> {
                 if(RESULT_OK == resultCode) {
-                    println("Result Code $resultCode")
                     valueCallBack?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
                 }
             }
         }
     }
-
 
     private fun scanNetwork(webView: WebView, route: String = "") {
         thread {
@@ -111,7 +106,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
     }
 
     private fun loadURL(url: String) {
@@ -122,6 +116,10 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    /***
+     * TODO: change R.string.url_cloud
+     * R.string.url_cloud currently set to test site.
+     */
     private fun navigateToCloud() {
         webView.post(Runnable {
             val urlCloud: String = resources.getString(R.string.url_cloud)
