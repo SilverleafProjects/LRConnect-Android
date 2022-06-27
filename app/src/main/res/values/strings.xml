@@ -22,7 +22,7 @@
     <string name="menu_text_cloud_page">Cloud Login</string>
     <string name="menu_text_clear_preferences">Clear Preferences</string>
     <string name="menu_text_clear_cache">Clear Cache</string>
-    <string name="button_dialog_cloud_options_cancel">Cancel</string>
+    <string name="button_dialog_cloud_options_done">Done</string>
     <string name="text_view_dialog_cloud_options_title">Winnebago Cloud</string>
     <string name="button_dialog_cloud_options_enable">Enable</string>
     <string name="button_dialog_cloud_options_disable">Disable</string>

@@ -14,6 +14,9 @@ import android.webkit.WebView
 import android.widget.ProgressBar
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import preferences.Preferences
 import scannetwork.MdnsHandler
 import webviewsettings.setWebView
@@ -57,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.main_page-> appendToIPAddress("")
-            R.id.scan_network-> scanNetwork(webView)
+            R.id.scan_network-> scanNetwork()
             R.id.enter_ip_address-> showDialogEnterIPAddress()
             R.id.clear_preferences-> preferences.clearPreferences()
             R.id.clear_cache->clearBrowserCache()
@@ -81,6 +84,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setIPAddressToLR125(route: String = "") {
+        val mdnsHandler = MdnsHandler(this)
+        val bonjourServices = mdnsHandler.services
+        if (bonjourServices.isNotEmpty()) {
+            ipAddress = bonjourServices[0].inet4Address.toString()
+            println(ipAddress)
+            loadURL("$ipAddress/$route")
+        }
+        if (bonjourServices.isEmpty()) {
+            runOnUiThread {
+                println("No LR125 Found.")
+                val dialogGenericError = DialogGenericError(
+                    this,
+                    webView,
+                    "Unable to connect to the LR125",
+                    "Rescan for devices?"
+                )
+                dialogGenericError.show()
+                dialogGenericError.window?.setLayout(dialogSide, dialogSide)
+            }
+        }
+    }
+
+    private fun scanNetwork(route: String = "") {
+        CoroutineScope(Dispatchers.IO).launch {
+            setIPAddressToLR125(route)
+        }
+    }
+    /*
     private fun scanNetwork(webView: WebView, route: String = "") {
         thread {
             kotlin.run {
@@ -106,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
+    }*/
 
     private fun loadURL(url: String) {
         webView.post(Runnable {
@@ -150,7 +182,7 @@ class MainActivity : AppCompatActivity() {
             loadURL("$ipAddress/$route")
             return
         }
-        scanNetwork(webView, route)
+        scanNetwork(route)
     }
 
     private fun bindUI() {

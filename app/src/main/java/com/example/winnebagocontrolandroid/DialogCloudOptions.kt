@@ -5,8 +5,12 @@ import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import android.view.Window
+import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import preferences.Preferences
 import websocket.MessageListener
 import websocket.WebSocketManager
@@ -15,13 +19,13 @@ import kotlin.concurrent.thread
 class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), MessageListener {
     private val PORT = 8092
     private lateinit var buttonDialogCloudOptionsToggle: Button
-    private lateinit var buttonDialogCloudOptionsCancel: Button
+    private lateinit var buttonDialogCloudOptionsDone: Button
     private lateinit var textViewDialogCloudOptionsState: TextView
     var preferences = Preferences(activity.baseContext)
     private var cloudEnabled = false
     private var ipIsValid = false
-
     private var url: String
+
     init {
         if(ip != "")
             ipIsValid = true
@@ -37,22 +41,21 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
         bindUI()
 
         if(ipIsValid) {
-            WebSocketManager.initialize(this.url, this)
-            thread {
-                kotlin.run {
-                    WebSocketManager.connect()
-                    WebSocketManager.sendMessage("LR_EC2ENABLE")
-                }
+            CoroutineScope(Dispatchers.IO).launch {
+                connectWebSocket()
             }
         }
     }
 
-//    private fun currentState(returnCurrentState: Boolean): String {
-//        val isEnabled = preferences.retrieveBoolean(context.getString(R.string.preference_cloud_enabled))
-//        if(isEnabled && returnCurrentState)
-//            return context.getString(R.string.button_dialog_cloud_options_enable)
-//
-//    }
+    private fun connectWebSocket() {
+        WebSocketManager.initialize(this.url, this)
+        WebSocketManager.connect()
+        WebSocketManager.sendMessage("LR_EC2ENABLE")
+    }
+
+    private fun disconnectWebSocket() {
+        WebSocketManager.close()
+    }
 
     private fun cloudOptionToggleState() {
         val state = if(cloudEnabled) "disabled" else "enabled"
@@ -68,7 +71,6 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
     }
 
     private fun bindUI() {
-
         textViewDialogCloudOptionsState = findViewById(R.id.textViewDialogCloudOptionsState)
         val state = if(ipIsValid) "Checking State . . ." else "No device found"
         textViewDialogCloudOptionsState.text = state //context.getString(R.string.button_dialog_cloud_options_enable)
@@ -82,13 +84,11 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
         if(!ipIsValid)
             buttonDialogCloudOptionsToggle.visibility = View.GONE
 
-        buttonDialogCloudOptionsCancel = findViewById(R.id.buttonDialogCloudOptionsCancel)
-        buttonDialogCloudOptionsCancel.setOnClickListener {
+        buttonDialogCloudOptionsDone = findViewById(R.id.buttonDialogCloudOptionsDone)
+        buttonDialogCloudOptionsDone.setOnClickListener {
             if(ipIsValid) {
-                thread {
-                    kotlin.run {
-                        WebSocketManager.close()
-                    }
+                CoroutineScope(Dispatchers.IO).launch {
+                    disconnectWebSocket()
                 }
             }
             this.cancel()
@@ -115,6 +115,7 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
             println(messageParts[1])
             if(messageParts[1] == "enabled") {
                 cloudEnabled = true
+                setButtonToggleText("")
                 setButtonToggleText("disable")
                 setTextViewStateText("Enabled")
             }
