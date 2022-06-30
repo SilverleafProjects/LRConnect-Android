@@ -40,9 +40,14 @@ class DialogGenericError(activity: Activity, webView: WebView, displayError: Str
 
     private fun bindUI() {
         buttonDialogGenericErrorAccept = findViewById(R.id.buttonDialogGenericErrorAccept)
+        buttonDialogGenericErrorAccept.setOnClickListener {
+            MainActivity.callScanNetworkOnDialogClose = true
+            this.cancel()
+        }
 
         buttonDialogGenericErrorCancel = findViewById(R.id.buttonDialogGenericErrorCancel)
         buttonDialogGenericErrorCancel.setOnClickListener{
+            MainActivity.callScanNetworkOnDialogClose = false
             this.cancel()
         }
 

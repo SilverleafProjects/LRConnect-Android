@@ -3,6 +3,7 @@ package webviewsettings
 import android.app.Activity
 import android.net.Uri
 import android.view.View
+import android.webkit.ConsoleMessage
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -41,6 +42,15 @@ class WinnieWebChromeClient(progressBar: ProgressBar, activity: Activity): WebCh
         progressBar.progress = progress
 
         super.onProgressChanged(view, progress)
+    }
+
+    override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+        if(consoleMessage?.message()!!.contains("myWonderfulToken")) {
+            val messageParts = consoleMessage.message().split(":")
+            MainActivity.saveTokenToPreferences(messageParts[1])
+            println("My token: ${messageParts[1]}")
+        }
+        return super.onConsoleMessage(consoleMessage)
     }
 
 

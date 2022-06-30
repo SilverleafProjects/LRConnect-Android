@@ -20,18 +20,23 @@ import kotlinx.coroutines.launch
 import preferences.Preferences
 import scannetwork.MdnsHandler
 import webviewsettings.setWebView
-import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     lateinit var progressBar: ProgressBar
-    lateinit var preferences: Preferences
+//    lateinit var preferences: Preferences
     var dialogSide: Int = 0
+    private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
 
     companion object {
         var ipAddress: String = ""
         var valueCallBack: ValueCallback<Array<Uri>>? = null
         const val FILE_RESULT_CODE: Int = 69
+        var callScanNetworkOnDialogClose: Boolean = false
+        lateinit var preferences: Preferences
+        fun saveTokenToPreferences(token: String) {
+            preferences.saveString("token", token)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,17 +44,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         preferences = Preferences(this)
+        if(preferences.retrieveString("token") != null) {
+            val token = preferences.retrieveString("token")
+            println("Found token: $token")
+        }
         dialogSide = 9 *  Math.min(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels) / 10
 
+        bindUI()
         val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
 
-        if(wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED)
-            println("Wifi enabled")
+        if(wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED) {
+            scanNetwork()
+        }
 
-        if(wifiManager.wifiState == WifiManager.WIFI_STATE_DISABLED)
-            println("Wifi disabled")
-
-        bindUI()
+        if(wifiManager.wifiState == WifiManager.WIFI_STATE_DISABLED) {
+            showDialogWifiNotEnabled()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -85,14 +95,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setIPAddressToLR125(route: String = "") {
+        runOnUiThread {
+            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+            dialogNetworkScanInProgress?.show()
+            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+        }
+
         val mdnsHandler = MdnsHandler(this)
         val bonjourServices = mdnsHandler.services
         if (bonjourServices.isNotEmpty()) {
+            dialogNetworkScanInProgress?.cancel()
+            callScanNetworkOnDialogClose = false
             ipAddress = bonjourServices[0].inet4Address.toString()
             println(ipAddress)
             loadURL("$ipAddress/$route")
         }
         if (bonjourServices.isEmpty()) {
+            dialogNetworkScanInProgress?.cancel()
             runOnUiThread {
                 println("No LR125 Found.")
                 val dialogGenericError = DialogGenericError(
@@ -103,42 +122,26 @@ class MainActivity : AppCompatActivity() {
                 )
                 dialogGenericError.show()
                 dialogGenericError.window?.setLayout(dialogSide, dialogSide)
+                dialogGenericError.setOnCancelListener {
+                    if(callScanNetworkOnDialogClose) {
+                        scanNetwork()
+                    }
+                }
             }
         }
     }
 
     private fun scanNetwork(route: String = "") {
-        CoroutineScope(Dispatchers.IO).launch {
-            setIPAddressToLR125(route)
+        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+            showDialogWifiNotEnabled()
         }
-    }
-    /*
-    private fun scanNetwork(webView: WebView, route: String = "") {
-        thread {
-            kotlin.run {
-                val mdnsHandler = MdnsHandler(this)
-                val bonjourServices = mdnsHandler.services
-                if (bonjourServices.isNotEmpty()) {
-                    ipAddress = bonjourServices[0].inet4Address.toString()
-                    println(ipAddress)
-                    this.loadURL("$ipAddress/$route")
-                }
-                if (bonjourServices.isEmpty()) {
-                    runOnUiThread {
-                        println("No LR125 Found.")
-                        val dialogGenericError = DialogGenericError(
-                            this,
-                            webView,
-                            "Unable to connect to the LR125",
-                            "Rescan for devices?"
-                        )
-                        dialogGenericError.show()
-                        dialogGenericError.window?.setLayout(dialogSide, dialogSide)
-                    }
-                }
+        else {
+            CoroutineScope(Dispatchers.IO).launch {
+                setIPAddressToLR125(route)
             }
         }
-    }*/
+    }
 
     private fun loadURL(url: String) {
         webView.post(Runnable {
@@ -160,15 +163,46 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDialogEnterIPAddress() {
-        val dialogEnterIPAddress = DialogEnterIPAddress(this, webView)
-        dialogEnterIPAddress.show()
-        dialogEnterIPAddress.window?.setLayout(dialogSide, dialogSide)
+        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+            showDialogWifiNotEnabled()
+        }
+        else {
+            val dialogEnterIPAddress = DialogEnterIPAddress(this, webView)
+            dialogEnterIPAddress.show()
+            dialogEnterIPAddress.window?.setLayout(dialogSide, dialogSide)
+        }
     }
 
     private fun showDialogCloudOptions() {
-        val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
-        dialogCloudOptions.show()
-        dialogCloudOptions.window?.setLayout(dialogSide, dialogSide)
+        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+            showDialogWifiNotEnabled()
+        }
+        else {
+            val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
+            dialogCloudOptions.show()
+            dialogCloudOptions.window?.setLayout(dialogSide, dialogSide)
+        }
+    }
+
+    private fun showDialogWifiNotEnabled() {
+        val dialogWifiNotEnabled = DialogWifiNotEnabled(this, webView)
+        dialogWifiNotEnabled.show()
+        dialogWifiNotEnabled.window?.setLayout(dialogSide, dialogSide)
+
+        dialogWifiNotEnabled.setOnCancelListener {
+            if(callScanNetworkOnDialogClose) {
+                scanNetwork()
+            }
+        }
+    }
+
+    private fun wifiNotEnabledGuard() {
+        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+            showDialogWifiNotEnabled()
+        }
     }
 
     private fun clearBrowserCache() {

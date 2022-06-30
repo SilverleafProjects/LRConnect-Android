@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textViewDialogNetworkScanInProgressTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:textSize="20sp"
+        android:layout_margin="20dp"
+        android:textColor="@color/winnie_red"
+        android:text="@string/text_view_dialog_network_scan_in_progress_title"/>
+
+    <TextView
+        android:id="@+id/textViewDialogNetworkScanInProgressMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewDialogNetworkScanInProgressTitle"
+        android:gravity="center_horizontal"
+        android:textSize="20sp" />
+
+
+
+</RelativeLayout>

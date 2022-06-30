@@ -24,12 +24,20 @@ class WinnieWebViewClient : WebViewClient() {
         println("Error: $errorCode")
         super.onReceivedError(view, request, error)
     }
-
+/*
     override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
 //        super.onReceivedSslError(view, handler, error)
         val sslCertificate = error!!.certificate.toString()
         println("SSL: $sslCertificate")
         handler!!.proceed()
+    }*/
+
+    override fun onPageFinished(view: WebView?, url: String?) {
+        if(url!!.contains("testmyrozie")) {
+            println("testmyrozie Loaded.")
+            view!!.loadUrl("javascript:(function() { setTimeout(function() { console.log('myWonderfulToken:' + document.getElementById('registration_token').innerHTML) }, 1000)})()")
+        }
+        super.onPageFinished(view, url)
     }
 
 }
