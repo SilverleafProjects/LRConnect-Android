@@ -21,6 +21,7 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
     private lateinit var textViewDialogWifiNotConnectedMessage: TextView
     private lateinit var textViewDialogWifiNotConnectedError: TextView
 
+    private var shouldCheckForWifi: Boolean = true
     private var webView: WebView
     private var activity: Activity
     init {
@@ -43,7 +44,7 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
 
     private suspend fun checkForWifiConnection() {
         val wifiManager = (context.getSystemService(Context.WIFI_SERVICE) as WifiManager)
-        while(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+        while(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED &&  shouldCheckForWifi) {
             delay(1000)
             println("Call from dialog loop.")
         }
@@ -58,11 +59,13 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
             webView.post(Runnable {
                 webView.loadUrl(activity.resources.getString(R.string.url_cloud))
             })
+            shouldCheckForWifi = false
             this.cancel()
         }
 
         buttonDialogWifiNotConnectedExitApp = findViewById(R.id.buttonDialogWifiNotConnectedExitApp)
-        buttonDialogWifiNotConnectedExitApp.setOnClickListener{
+        buttonDialogWifiNotConnectedExitApp.setOnClickListener {
+            shouldCheckForWifi = false
             activity.finish()
             exitProcess(0)
         }

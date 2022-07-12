@@ -10,8 +10,6 @@
     <string name="text_view_dialog_enter_ip_address">Enter IP Address</string>
     <string name="button_dialog_enter_ip_address_accept">Accept</string>
     <string name="button_dialog_enter_ip_address_cancel">Cancel</string>
-    <string name="button_dialog_generic_error_accept">Accept</string>
-    <string name="button_dialog_generic_error_cancel">Cancel</string>
     <string name="ip_address_not_local">The selected IP address must be on the local network!</string>
     <string name="menu_text_main_page">Main Page</string>
     <string name="menu_text_scan_network">Scan Network</string>
