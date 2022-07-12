@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             R.id.main_page-> appendToIPAddress("")
             R.id.scan_network-> scanNetwork()
             R.id.enter_ip_address-> showDialogEnterIPAddress()
-            R.id.clear_preferences-> preferences.clearPreferences()
+//            R.id.clear_preferences-> preferences.clearPreferences()
             R.id.clear_cache->clearBrowserCache()
             R.id.admin_page-> appendToIPAddress(resources.getString(R.string.route_admin))
             R.id.network_page-> appendToIPAddress(resources.getString(R.string.route_network))
@@ -97,14 +97,23 @@ class MainActivity : AppCompatActivity() {
 
         val mdnsHandler = MdnsHandler(this)
         val bonjourServices = mdnsHandler.services
+        var failedToFindLR125: Boolean = true
         if (bonjourServices.isNotEmpty()) {
             dialogNetworkScanInProgress?.cancel()
             callScanNetworkOnDialogClose = false
-            ipAddress = bonjourServices[0].inet4Address.toString()
-            println(ipAddress)
-            loadURL("$ipAddress/$route")
+
+            for(i in 0 until bonjourServices.size) {
+                println(bonjourServices[i].inet4Address.toString())
+                if(ipAddressIsValid(bonjourServices[i].inet4Address.toString())) {
+                    ipAddress = bonjourServices[i].inet4Address.toString()
+                    loadURL("$ipAddress/$route")
+                    failedToFindLR125 = false
+                    println("Loading index $i")
+                    break
+                }
+            }
         }
-        if (bonjourServices.isEmpty()) {
+        if (failedToFindLR125) {
             dialogNetworkScanInProgress?.cancel()
             runOnUiThread {
                 showDialogLRNotFound()
@@ -126,13 +135,12 @@ class MainActivity : AppCompatActivity() {
         webView.post(Runnable {
             val protocol = resources.getString(R.string.protocol_http)
             webView.loadUrl("$protocol$url")
-            println("${webView.url}")
         })
     }
 
     /***
      * TODO: change R.string.url_cloud
-     * R.string.url_cloud currently set to test site.
+     * R.string.url_cloud currently set to test site. // currently correct.
      */
     private fun navigateToCloud() {
         webView.post(Runnable {
@@ -196,11 +204,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun appendToIPAddress(route: String) {
-        if(ipAddress != "" && ipAddress != "null") {
+        if(ipAddressIsValid(ipAddress)) {
             loadURL("$ipAddress/$route")
             return
         }
         scanNetwork(route)
+    }
+
+    private fun ipAddressIsValid(ipToValidate: String): Boolean {
+        val ip = ipToValidate.replace("/", "")
+        val ipParts = ip.split('.')
+        if(ipParts.size != 4)
+            return false
+
+        for(i in ipParts.indices) {
+            if(ipParts[i].toInt() > 255 || ipParts[i].toInt() < 0)
+                return false
+        }
+        return true
     }
 
     private fun bindUI() {

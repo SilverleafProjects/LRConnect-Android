@@ -22,8 +22,8 @@
     </item>
     <item android:id="@+id/cloud_page" android:title="@string/menu_text_cloud_page">
     </item>
-    <item android:id="@+id/clear_preferences" android:title="@string/menu_text_clear_preferences">
-    </item>
+<!--    <item android:id="@+id/clear_preferences" android:title="@string/menu_text_clear_preferences">-->
+<!--    </item>-->
     <item android:id="@+id/clear_cache" android:title="@string/menu_text_clear_cache">
     </item>
 </menu>
