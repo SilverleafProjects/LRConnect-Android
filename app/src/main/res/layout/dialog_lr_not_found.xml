@@ -4,39 +4,41 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/textViewDialogGenericErrorDisplayError"
+        android:id="@+id/textViewDialogLRNotFoundError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:gravity="center_horizontal"
         android:textSize="20sp"
         android:layout_margin="20dp"
-        android:textColor="@color/winnie_red" />
+        android:textColor="@color/winnie_red"
+        android:text="@string/text_view_dialog_lr_not_found_error_text"/>
 
     <TextView
-        android:id="@+id/textViewDialogGenericErrorDisplayOption"
+        android:id="@+id/textViewDialogLRNotFoundOption"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonDialogGenericErrorAccept"
+        android:layout_above="@+id/buttonDialogLRNotFoundRescan"
         android:gravity="center_horizontal"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:text="@string/text_view_dialog_lr_not_found_option_text"/>
 
     <Button
-        android:id="@+id/buttonDialogGenericErrorAccept"
+        android:id="@+id/buttonDialogLRNotFoundRescan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:text="@string/button_dialog_generic_error_accept"/>
+        android:text="@string/button_dialog_lr_not_found_rescan"/>
 
     <Button
-        android:id="@+id/buttonDialogGenericErrorCancel"
+        android:id="@+id/buttonDialogLRNotFoundCancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:text="@string/button_dialog_generic_error_cancel"/>
+        android:text="@string/button_dialog_lr_not_found_cancel"/>
 
 </RelativeLayout>

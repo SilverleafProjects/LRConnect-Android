@@ -14,17 +14,15 @@ import android.webkit.WebView
 import android.widget.ProgressBar
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import preferences.Preferences
 import scannetwork.MdnsHandler
 import webviewsettings.setWebView
+import java.lang.Runnable
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     lateinit var progressBar: ProgressBar
-//    lateinit var preferences: Preferences
     var dialogSide: Int = 0
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
 
@@ -51,15 +49,11 @@ class MainActivity : AppCompatActivity() {
         dialogSide = 9 *  Math.min(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels) / 10
 
         bindUI()
-        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
 
-        if(wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED) {
-            scanNetwork()
-        }
-
-        if(wifiManager.wifiState == WifiManager.WIFI_STATE_DISABLED) {
+        if(!wifiIsEnabled())
             showDialogWifiNotEnabled()
-        }
+        else
+            scanNetwork()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -113,29 +107,14 @@ class MainActivity : AppCompatActivity() {
         if (bonjourServices.isEmpty()) {
             dialogNetworkScanInProgress?.cancel()
             runOnUiThread {
-                println("No LR125 Found.")
-                val dialogGenericError = DialogGenericError(
-                    this,
-                    webView,
-                    "Unable to connect to the LR125",
-                    "Rescan for devices?"
-                )
-                dialogGenericError.show()
-                dialogGenericError.window?.setLayout(dialogSide, dialogSide)
-                dialogGenericError.setOnCancelListener {
-                    if(callScanNetworkOnDialogClose) {
-                        scanNetwork()
-                    }
-                }
+                showDialogLRNotFound()
             }
         }
     }
 
     private fun scanNetwork(route: String = "") {
-        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+        if(!wifiIsEnabled())
             showDialogWifiNotEnabled()
-        }
         else {
             CoroutineScope(Dispatchers.IO).launch {
                 setIPAddressToLR125(route)
@@ -163,10 +142,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDialogEnterIPAddress() {
-        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+        if(!wifiIsEnabled())
             showDialogWifiNotEnabled()
-        }
         else {
             val dialogEnterIPAddress = DialogEnterIPAddress(this, webView)
             dialogEnterIPAddress.show()
@@ -175,10 +152,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDialogCloudOptions() {
-        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+        if(!wifiIsEnabled())
             showDialogWifiNotEnabled()
-        }
         else {
             val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
             dialogCloudOptions.show()
@@ -198,11 +173,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun wifiNotEnabledGuard() {
-        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-        if(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
-            showDialogWifiNotEnabled()
+    private fun showDialogLRNotFound() {
+        val dialogLRNotFound = DialogLRNotFound(this)
+        dialogLRNotFound.show()
+        dialogLRNotFound.window?.setLayout(dialogSide, dialogSide)
+        dialogLRNotFound.setOnCancelListener {
+            if(callScanNetworkOnDialogClose) {
+                scanNetwork()
+            }
         }
+    }
+
+    private fun wifiIsEnabled() : Boolean {
+        val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        return wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED
     }
 
     private fun clearBrowserCache() {
