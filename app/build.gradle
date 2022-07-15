@@ -7,11 +7,11 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.example.winnebagocontrolandroid"
+        applicationId "com.silverleaf.winnebagocontrolandroid"
         minSdk 21
         targetSdk 32
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.02"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

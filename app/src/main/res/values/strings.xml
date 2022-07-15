@@ -33,7 +33,7 @@
     <string name="text_view_dialog_wifi_not_connected_message">For Winnebago Control to function properly, it requires a wifi network connection. Please connect your device to a wifi network. You can also Log-in via Cloud or exit the app.</string>
     <string name="text_view_dialog_network_scan_in_progress_title">Network Scan</string>
     <string name="text_view_dialog_network_scan_in_progress_message">Scanning Network</string>
-    <string name="button_dialog_lr_not_found_cancel">cancel</string>
+    <string name="button_dialog_lr_not_found_cancel">Cancel</string>
     <string name="button_dialog_lr_not_found_rescan">Rescan</string>
     <string name="text_view_dialog_lr_not_found_error_text">Unable to connect to the LR125</string>
     <string name="text_view_dialog_lr_not_found_option_text">Rescan for the LR125?</string>

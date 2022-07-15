@@ -13,7 +13,6 @@ class WinnieWebViewClient : WebViewClient() {
     }
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         println(request.toString())
-//        return super.shouldOverrideUrlLoading(view, request)
         return false
     }
 
@@ -24,14 +23,8 @@ class WinnieWebViewClient : WebViewClient() {
         println("Error: $errorCode")
         super.onReceivedError(view, request, error)
     }
-/*
-    override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
-//        super.onReceivedSslError(view, handler, error)
-        val sslCertificate = error!!.certificate.toString()
-        println("SSL: $sslCertificate")
-        handler!!.proceed()
-    }*/
 
+    /** TODO: Use this so the user doesn't have to remember the web page token
     override fun onPageFinished(view: WebView?, url: String?) {
         if(url!!.contains("testmyrozie")) {
             println("testmyrozie Loaded.")
@@ -39,5 +32,6 @@ class WinnieWebViewClient : WebViewClient() {
         }
         super.onPageFinished(view, url)
     }
+    **/
 
 }
