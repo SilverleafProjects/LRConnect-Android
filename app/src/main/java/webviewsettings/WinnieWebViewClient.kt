@@ -37,7 +37,10 @@ class WinnieWebViewClient : WebViewClient() {
 //        super.onReceivedSslError(view, handler, error)
         val sslCertificate = error!!.certificate.toString()
         println("SSL: $sslCertificate")
-        handler!!.proceed()
+
+        if(sslCertificate.contains("Silverleaf")) {
+            handler!!.proceed()
+        }
     }
 
 }
