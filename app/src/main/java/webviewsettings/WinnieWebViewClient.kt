@@ -33,5 +33,11 @@ class WinnieWebViewClient : WebViewClient() {
         super.onPageFinished(view, url)
     }
     **/
+    override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
+//        super.onReceivedSslError(view, handler, error)
+        val sslCertificate = error!!.certificate.toString()
+        println("SSL: $sslCertificate")
+        handler!!.proceed()
+    }
 
 }
