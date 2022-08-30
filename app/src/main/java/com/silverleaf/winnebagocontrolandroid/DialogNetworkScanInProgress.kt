@@ -12,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
-    private lateinit var textViewDialogNetworkScanInProgressTitle: TextView
     private lateinit var textViewDialogNetworkScanInProgressMessage: TextView
 
 
@@ -35,7 +34,7 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
             while(dialogNotCancelled) {
                 counter++
                 setMessageText(counter)
-                delay(800)
+                delay(600)
             }
         }
     }
@@ -46,23 +45,19 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
     }
 
     private fun setMessageText(counter: Int) {
-            println("Set Message text called: $counter")
-            val baseText = activity.resources.getText(R.string.text_view_dialog_network_scan_in_progress_message)
-            if(counter % 4 == 0)
-                textViewDialogNetworkScanInProgressMessage.text = "$baseText"
-            else if(counter % 4 == 1)
-                textViewDialogNetworkScanInProgressMessage.text = "$baseText ."
-            else if(counter % 4 == 2)
-                textViewDialogNetworkScanInProgressMessage.text = "$baseText . ."
-            else
-                textViewDialogNetworkScanInProgressMessage.text = "$baseText . . ."
+        val baseText = activity.resources.getText(R.string.text_view_dialog_network_scan_in_progress_message)
+        var dots = counter % 4
+        var messageText = baseText
+        while(dots > 0) {
+            messageText = "$messageText ."
+            dots--
+        }
+
+        textViewDialogNetworkScanInProgressMessage.text = messageText
+
     }
 
-
     private fun bindUI() {
-//        textViewDialogNetworkScanInProgressTitle = findViewById(R.id.textViewDialogNetworkScanInProgressTitle)
-//        textViewDialogNetworkScanInProgressTitle.text = activity.resources.getString(R.string.text_view_dialog_network_scan_in_progress_title)
-
         textViewDialogNetworkScanInProgressMessage = findViewById(R.id.textViewDialogNetworkScanInProgressMessage)
         textViewDialogNetworkScanInProgressMessage.text =  activity.resources.getText(R.string.text_view_dialog_network_scan_in_progress_message)
     }

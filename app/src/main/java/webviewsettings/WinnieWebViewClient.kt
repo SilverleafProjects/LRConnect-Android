@@ -38,9 +38,19 @@ class WinnieWebViewClient : WebViewClient() {
         val sslCertificate = error!!.certificate.toString()
         println("SSL: $sslCertificate")
 
-        if(sslCertificate.contains("Silverleaf")) {
+        if(trustCertificate(sslCertificate)) {
             handler!!.proceed()
         }
+    }
+
+    private fun trustCertificate(sslCert: String) : Boolean {
+        var certIsTrusted = false
+
+        if(sslCert.contains("Silverleaf")) {
+            certIsTrusted = true
+        }
+
+        return certIsTrusted
     }
 
 }

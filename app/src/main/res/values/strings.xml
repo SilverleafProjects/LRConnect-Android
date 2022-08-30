@@ -11,11 +11,11 @@
     <string name="button_dialog_enter_ip_address_accept">Accept</string>
     <string name="button_dialog_enter_ip_address_cancel">Cancel</string>
     <string name="ip_address_not_local">The selected IP address must be on the local network!</string>
-    <string name="menu_text_main_page">Main Page</string>
-    <string name="menu_text_scan_network">Scan Network</string>
-    <string name="menu_text_enter_ip_address">Enter IP Address</string>
-    <string name="menu_text_admin_page">Admin Page</string>
-    <string name="menu_text_network_page">Network Page</string>
+    <string name="menu_text_main_page">Home Screen</string>
+    <string name="menu_text_scan_network">Connect to Coach</string>
+    <string name="menu_text_enter_ip_address">Connect Manually</string>
+    <string name="menu_text_admin_page">Advanced Settings</string>
+    <string name="menu_text_network_page">Connection Settings</string>
     <string name="menu_text_cloud_options">Cloud Options</string>
     <string name="menu_text_cloud_page">Cloud Login</string>
     <string name="menu_text_clear_preferences">Clear Preferences</string>

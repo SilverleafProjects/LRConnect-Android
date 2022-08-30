@@ -8,11 +8,11 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/winnie_icon_twohundred"
+        android:icon="@mipmap/flyingw"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/winnie_icon"
+        android:roundIcon="@mipmap/flyingw"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.WinnebagoControlAndroid"
