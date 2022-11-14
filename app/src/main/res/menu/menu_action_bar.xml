@@ -8,6 +8,8 @@
 <!--    <item android:id="@+id/search" android:icon="@drawable/ic_search" android:title="Search" app:showAsAction="ifRoom">-->
 <!--    </item>-->
 <!--    <item android:id="@+id/action_settings" android:title="@string/action_settings" />-->
+    <item android:id="@+id/refresh" android:title="Refresh">
+    </item>
     <item android:id="@+id/cloud_page" android:title="@string/menu_text_cloud_page">
     </item>
     <item android:id="@+id/scan_network" android:title="@string/menu_text_scan_network">
