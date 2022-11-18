@@ -27,6 +27,7 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
     private var url: String
 
     init {
+        setCancelable(false);
         if(ip != "") {
             ipIsValid = true
             isCheckingForCloudStatus = true
@@ -141,8 +142,8 @@ class DialogCloudOptions(activity: Activity, ip: String): Dialog(activity), Mess
         WebSocketManager.close()
     }
 
-    override fun onMessage(message: String?) {
-        val messageParts = message!!.split("=")
+    override fun onMessage(text: String?) {
+        val messageParts = text!!.split("=")
         if(messageParts[0] == "LR_EC2ENABLE") {
             println("LR_EC2ENABLE: ${messageParts[1]}")
             if(messageParts[1] == "enabled") {

@@ -54,7 +54,9 @@ public class MdnsHandler {
         if(System.currentTimeMillis() < creationTime + initTime) {
             try {
                 Thread.sleep(initTime);
-            } catch (InterruptedException e) { /*swallow*/ }
+            } catch (InterruptedException e) {
+                Log.e("Exception", "Exception in thread sleeping in get services bonjour");
+            }
         }
         synchronized (bonjourservices) {
             return new ArrayList<>(bonjourservices);

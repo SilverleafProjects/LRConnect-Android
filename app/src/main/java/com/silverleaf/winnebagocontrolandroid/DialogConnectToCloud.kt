@@ -3,13 +3,16 @@ package com.silverleaf.winnebagocontrolandroid
 import android.app.Activity
 import android.app.Dialog
 import android.os.Bundle
+import android.view.View
 import android.view.Window
 import android.webkit.WebView
 import android.widget.Button
+import android.widget.TextView
 
 class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogConnectToCloudConnect: Button
     private lateinit var buttonDialogConnectToCloudCancel: Button
+    private lateinit var textViewNoInternet: TextView
 
     private var webView: WebView
     private var activity: Activity
@@ -31,18 +34,26 @@ class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activit
         super.cancel()
     }
     private fun bindUI() {
+        textViewNoInternet = findViewById((R.id.textViewNoInternet2))
+        textViewNoInternet.visibility = View.INVISIBLE
+
         buttonDialogConnectToCloudConnect = findViewById(R.id.buttonDialogConnectToCloudConnect)
         buttonDialogConnectToCloudConnect.setOnClickListener {
-            webView.post(Runnable {
-                webView.loadUrl(activity.resources.getString(R.string.url_cloud))
-            })
-            this.cancel()
+            if(MainActivity.internetAvailable) {
+                textViewNoInternet.visibility = View.INVISIBLE
+                webView.post(Runnable {
+                    webView.loadUrl(activity.resources.getString(R.string.url_cloud))
+                })
+                this.cancel()
+            } else {
+                textViewNoInternet.visibility = View.VISIBLE
+            }
         }
 
-        buttonDialogConnectToCloudCancel = findViewById(R.id.buttonDialogConnectToCloudCancel)
+        /*buttonDialogConnectToCloudCancel = findViewById(R.id.buttonDialogConnectToCloudCancel)
         buttonDialogConnectToCloudCancel.setOnClickListener {
             MainActivity.callScanNetworkOnDialogClose = false
             this.cancel()
-        }
+        }*/
     }
 }

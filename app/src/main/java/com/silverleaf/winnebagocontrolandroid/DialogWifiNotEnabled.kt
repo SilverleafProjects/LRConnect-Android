@@ -16,8 +16,6 @@ import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activity) {
-    //private lateinit var buttonDialogWifiNotConnectedGoToCloudSite: Button
-    private lateinit var buttonDialogWifiNotConnectedExitApp: Button
     private lateinit var textViewDialogWifiNotConnectedMessage: TextView
     private lateinit var textViewDialogWifiNotConnectedError: TextView
 
@@ -63,12 +61,6 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
             this.cancel()
         }*/
 
-        buttonDialogWifiNotConnectedExitApp = findViewById(R.id.buttonDialogWifiNotConnectedExitApp)
-        buttonDialogWifiNotConnectedExitApp.setOnClickListener {
-            shouldCheckForWifi = false
-            activity.finish()
-            exitProcess(0)
-        }
 
         textViewDialogWifiNotConnectedMessage = findViewById(R.id.textViewDialogWifiNotConnectedMessage)
         textViewDialogWifiNotConnectedMessage.text = activity.resources.getString(R.string.text_view_dialog_wifi_not_connected_message)

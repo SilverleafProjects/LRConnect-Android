@@ -22,7 +22,7 @@ class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activit
     private lateinit var buttonDialogEnterIPAddressCancel: Button
     private lateinit var editTextDialogEnterIPAddress: EditText
     private lateinit var textViewDialogEnterIPAddressError: TextView
-    var preferences = Preferences(activity.baseContext)
+    private var preferences = Preferences(activity.baseContext)
     private lateinit var firstByte: String
     private lateinit var secondByte: String
 

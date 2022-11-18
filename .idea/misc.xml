@@ -5,10 +5,11 @@
       <map>
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/activity_main.xml" value="0.18802083333333333" />
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_cloud_options.xml" value="0.2390625" />
-        <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_connect_to_cloud.xml" value="0.23802083333333332" />
+        <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_connect_to_cloud.xml" value="0.75" />
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_enter_ip_address.xml" value="0.2390625" />
-        <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_lr_not_found.xml" value="0.2390625" />
+        <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_lr_not_found.xml" value="0.25" />
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_network_scan_in_progress.xml" value="0.2390625" />
+        <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_no_internet.xml" value="0.5" />
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/layout/dialog_wifi_not_enabled.xml" value="0.2390625" />
         <entry key="..\:/Users/Josh/StudioProjects/WinnebagoControlAndroid/app/src/main/res/menu/menu_action_bar.xml" value="0.2984375" />
         <entry key="..\:/Users/adam/Documents/Android/WinnebagoControlAndroid/app/src/main/res/layout/action_bar.xml" value="0.36666666666666664" />

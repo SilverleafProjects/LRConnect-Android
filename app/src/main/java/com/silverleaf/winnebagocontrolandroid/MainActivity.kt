@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.*
-import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
@@ -21,12 +20,13 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.*
 import preferences.Preferences
 import scannetwork.MdnsHandler
 import webviewsettings.setWebView
 import java.lang.Runnable
-import androidx.lifecycle.ProcessLifecycleOwner
+import java.net.InetAddress
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -35,14 +35,11 @@ class MainActivity : AppCompatActivity() {
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
     private var dialogConnectToCloud: DialogConnectToCloud? = null
     private var dialogWifiNotEnabled: DialogWifiNotEnabled? = null
-    private var lastConnectedSSID: String = ""
+    private var dialogLRNotFound: DialogLRNotFound? = null
     private var lastNetwork: Network? = null
     private val lifecycleListener: LifecycleListener by lazy {
         LifecycleListener(webView)
     }
-
-    /*private val wifiManager: WifiManager
-        get() = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager*/
 
     companion object {
         var ipAddress: String = ""
@@ -51,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         const val PERMISSION_CODE_ACCEPTED = 1
         const val PERMISSION_CODE_NOT_AVAILABLE = 0
         var callScanNetworkOnDialogClose: Boolean = false
+        var internetAvailable: Boolean = false
         lateinit var preferences: Preferences
         fun saveTokenToPreferences(token: String) {
             preferences.saveString("token", token)
@@ -74,11 +72,6 @@ class MainActivity : AppCompatActivity() {
         setNetworkChangeCallBack()
 
         setupLifecycleListener()
-        //if(!wifiIsEnabled())
-            //showDialogWifiNotEnabled()
-        //else
-    //  scanNetwork()
-
     }
 
     private fun setupLifecycleListener() {
@@ -136,20 +129,25 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    MainActivity.PERMISSION_CODE_ACCEPTED
+                    PERMISSION_CODE_ACCEPTED
                 )
             }
         } else {
             // already granted
-            return MainActivity.PERMISSION_CODE_ACCEPTED
+            return PERMISSION_CODE_ACCEPTED
         }
 
         // not available
-        return MainActivity.PERMISSION_CODE_NOT_AVAILABLE
+        return PERMISSION_CODE_NOT_AVAILABLE
     }
 
     private fun setIPAddressToLR125(route: String = "") {
-        Log.d("Test Point", "ONE")
+        if (dialogLRNotFound?.isShowing == true) {
+            dialogLRNotFound?.dismiss()
+        }
+        if (dialogNetworkScanInProgress?.isShowing == true) {
+            dialogNetworkScanInProgress?.dismiss()
+        }
         runOnUiThread {
             dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
             dialogNetworkScanInProgress?.show()
@@ -158,16 +156,16 @@ class MainActivity : AppCompatActivity() {
 
         val mdnsHandler = MdnsHandler(this)
         val bonjourServices = mdnsHandler.services
-        var failedToFindLR125: Boolean = true
+        var failedToFindLR125 = true
+        Log.d("Test Point", "TP1")
         if (bonjourServices.isNotEmpty()) {
-            Log.d("Test Point", "TWO")
+            Log.d("Test Point", "TP2")
             dialogNetworkScanInProgress?.cancel()
             callScanNetworkOnDialogClose = false
 
             for(i in 0 until bonjourServices.size) {
                 println(bonjourServices[i].inet4Address.toString())
                 if(ipAddressIsValid(bonjourServices[i].inet4Address.toString())) {
-                    Log.d("Test Point", "THREE")
                     ipAddress = bonjourServices[i].inet4Address.toString()
                     loadURL("$ipAddress/$route")
                     failedToFindLR125 = false
@@ -176,10 +174,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        Log.d("Test Point", "FOUR")
+        Log.d("Test Point", "TP3")
         if (failedToFindLR125) {
-            Log.d("Test Point", "FIVE")
+            Log.d("Test Point", "TP4")
             dialogNetworkScanInProgress?.cancel()
+
             runOnUiThread {
                 showDialogLRNotFound()
             }
@@ -203,14 +202,30 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    fun isInternetAvailable(): Boolean {
+        return try {
+            val ipAddr: InetAddress = InetAddress.getByName("google.com")
+            //You can replace it with your name
+            !ipAddr.equals("")
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     /***
      * TODO: Make sure R.string.url_cloud is correct
      * R.string.url_cloud might be set to test site. // currently correct.
      */
     private fun navigateToCloud() {
         webView.post(Runnable {
-            val urlCloud: String = resources.getString(R.string.url_cloud)
-            webView.loadUrl(urlCloud)
+            if(isInternetAvailable()) {
+                val urlCloud: String = resources.getString(R.string.url_cloud)
+                webView.loadUrl(urlCloud)
+            }
+            else
+            {
+                showDialogNoInternet();
+            }
         })
     }
 
@@ -218,6 +233,13 @@ class MainActivity : AppCompatActivity() {
         webView.post(Runnable {
             webView.reload()
         })
+    }
+
+    private fun showDialogNoInternet() {
+        val dialogNoInternet = DialogNoInternet(this)
+        dialogNoInternet.show()
+        dialogNoInternet.window?.setLayout(dialogSide, dialogSide)
+
     }
 
     private fun showDialogEnterIPAddress() {
@@ -253,10 +275,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDialogLRNotFound() {
-        val dialogLRNotFound = DialogLRNotFound(this, webView)
-        dialogLRNotFound.show()
-        dialogLRNotFound.window?.setLayout(dialogSide, dialogSide)
-        dialogLRNotFound.setOnCancelListener {
+       dialogLRNotFound = DialogLRNotFound(this, webView)
+        dialogLRNotFound?.show()
+        dialogLRNotFound?.window?.setLayout(dialogSide, dialogSide)
+        dialogLRNotFound?.setOnCancelListener {
             if(callScanNetworkOnDialogClose) {
                 scanNetwork()
             }
@@ -306,25 +328,23 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun setNetworkChangeCallBack() : Unit {
+    private fun setNetworkChangeCallBack() {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            var link: LinkProperties? =
-                connectivityManager.getLinkProperties(connectivityManager.activeNetwork) as? LinkProperties
+            val link: LinkProperties? =
+                connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
 
-            Log.d("IP ADDRESS TP3?", link?.linkAddresses.toString())
-            Log.d("Network Name Tp1?", link?.interfaceName.toString())
+            //Log.d("IP ADDRESS TP3?", link?.linkAddresses.toString())
+            //Log.d("Network Name Tp1?", link?.interfaceName.toString())
             link ?: run {
                 if (dialogWifiNotEnabled?.isShowing ?: false) {
                     dialogWifiNotEnabled?.dismiss()
                 }
 
-                showDialogWifiNotEnabled();
+                showDialogWifiNotEnabled()
             }
         }
         connectivityManager.let {
-
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 it.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
                     override fun onAvailable(network: Network) {
@@ -334,10 +354,10 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onLost(network: Network) {
                         Log.d("NETWORK", "Network has been lost")
-                        var link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork) as? LinkProperties
+                        val link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
 
-                        Log.d("IP ADDRESS? TP1", link?.linkAddresses.toString())
-                        Log.d("Network Name Tp2?", link?.interfaceName.toString())
+                        //Log.d("IP ADDRESS? TP1", link?.linkAddresses.toString())
+                        //Log.d("Network Name Tp2?", link?.interfaceName.toString())
                         link ?: run {
                             if (dialogNetworkScanInProgress?.isShowing ?: false) {
                                 dialogNetworkScanInProgress?.dismiss()
@@ -345,26 +365,19 @@ class MainActivity : AppCompatActivity() {
                             if (dialogConnectToCloud?.isShowing ?: false) {
                                 dialogConnectToCloud?.dismiss()
                             }
+                            if (dialogLRNotFound?.isShowing ?: false) {
+                                dialogLRNotFound?.dismiss()
+                            }
 
                             if (dialogWifiNotEnabled?.isShowing ?: false) {
                                 Log.d("Dialog", "Wifi Not enabled is showing")
                             } else {
-                                showDialogWifiNotEnabled();
+                                showDialogWifiNotEnabled()
                             }
                         }
                         super.onLost(network)
                     }
 
-                    override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties )
-                    {
-                        Log.d("IP ADDRESS POOP", linkProperties?.linkAddresses.toString())
-                        Log.d("IFACE Name", linkProperties?.interfaceName.toString())
-                    }
-
-                    override fun onUnavailable()
-                    {
-                        Log.d("OnUnvailable","Network is on Unavaible")
-                    }
 
                     override fun onCapabilitiesChanged(
                         network: Network,
@@ -376,11 +389,7 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             Log.d("NETWORK", "NETWORK IS NOT EQUAL")
                         }
-                        var link: LinkProperties =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork) as LinkProperties
 
-                        Log.d("IP ADDRESS? TP2", link.linkAddresses.toString())
-
-                        Log.d("NETWORK", "Network capabilities changed -- cellular")
                         if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                             Log.d("TEST", "Found cellular type")
                             if (dialogNetworkScanInProgress?.isShowing ?: false) {
@@ -389,28 +398,35 @@ class MainActivity : AppCompatActivity() {
                             if(dialogWifiNotEnabled?.isShowing ?: false) {
                                 dialogWifiNotEnabled?.dismiss()
                             }
-                            if (dialogConnectToCloud?.isShowing ?: false) {
-                                Log.d("DIALOG", "Dialog for cellular is showing")
-                            } else {
-                                Log.d("DIALOG", "Dialog for cellular opening")
-                                showDialogConnectToCloud()
-                                lastNetwork = network
+                            if (dialogLRNotFound?.isShowing ?: false) {
+                                dialogLRNotFound?.dismiss()
                             }
+                            lastNetwork = if (dialogConnectToCloud?.isShowing ?: false) {
+                                network
+                            } else {
+                                showDialogConnectToCloud()
+                                network
+                            }
+                            internetAvailable = isInternetAvailable()
+                            Log.d("Avail 1", internetAvailable.toString())
                         } else {
-                            Log.d("TEST", "found non celluar type")
                             if (dialogConnectToCloud?.isShowing ?: false) {
                                 dialogConnectToCloud?.dismiss()
                             }
                             if(dialogWifiNotEnabled?.isShowing ?: false) {
                                 dialogWifiNotEnabled?.dismiss()
                             }
-                            if (dialogNetworkScanInProgress?.isShowing ?: false) {
-                                Log.d("DIALOG", "Dialog for wifi is showing")
-                            } else {
-                                Log.d("DIALOG", "Dialog for wifi opening")
-                                scanNetwork()
-                                lastNetwork = network
+                            if (dialogLRNotFound?.isShowing ?: false) {
+                                dialogLRNotFound?.dismiss()
                             }
+                            lastNetwork = if (dialogNetworkScanInProgress?.isShowing ?: false) {
+                                network
+                            } else {
+                                scanNetwork()
+                                network
+                            }
+                            internetAvailable = isInternetAvailable()
+                            Log.d("Avail 2", internetAvailable.toString())
                         }
                         super.onCapabilitiesChanged(network, networkCapabilities)
                     }
