@@ -41,3 +41,35 @@ class DialogNoInternet(activity: Activity): Dialog(activity) {
 
     }
 }
+
+class DialogNoCloudService(activity: Activity): Dialog(activity){
+
+    private lateinit var buttonDialogDismiss: Button
+
+    private var activity: Activity
+    init {
+        setCancelable(false)
+        activity.also { this.activity = it }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        setContentView(R.layout.dialog_no_cloud_service)
+
+
+
+
+        bindUI()
+    }
+
+    private fun bindUI() {
+
+        buttonDialogDismiss = findViewById(R.id.buttonDialogNoCloudService)
+        buttonDialogDismiss.setOnClickListener {
+            this.cancel()
+        }
+
+    }
+
+}

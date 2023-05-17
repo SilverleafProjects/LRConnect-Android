@@ -13,6 +13,7 @@ import android.widget.TextView
 class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogLRNotFoundRescan: Button
     private lateinit var buttonDialogLRNotFoundCloud: Button
+    private lateinit var buttonCancel: Button
     private lateinit var textViewNoInternet: TextView
 
     private var webView: WebView
@@ -55,5 +56,11 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
             }
 
         }
+
+        buttonCancel = findViewById(R.id.returnButton)
+        buttonCancel.setOnClickListener{
+            this.cancel()
+        }
+
     }
 }

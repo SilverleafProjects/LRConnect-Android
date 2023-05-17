@@ -8,20 +8,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
         android:gravity="center_horizontal"
-        android:textSize="20sp"
-        android:layout_margin="20dp"
-        android:textColor="@color/winnie_red"
-        android:text="@string/text_view_dialog_cloud_options_title"/>
+        android:text="@string/text_view_dialog_cloud_options_title"
+        android:textColor="@color/text_color"
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/textViewDialogCloudOptionsState"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDialogCloudOptionsTitle"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
         android:gravity="center_horizontal"
-        android:layout_margin="20dp"
-        android:layout_marginTop="30dp"
         android:textSize="20sp" />
 
     <Button

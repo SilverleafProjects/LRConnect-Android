@@ -22,6 +22,8 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
     private var shouldCheckForWifi: Boolean = true
     private var webView: WebView
     private var activity: Activity
+
+
     init {
         setCancelable(false)
         webView.also{ this.webView = it }
@@ -61,11 +63,12 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
             this.cancel()
         }*/
 
-
         textViewDialogWifiNotConnectedMessage = findViewById(R.id.textViewDialogWifiNotConnectedMessage)
         textViewDialogWifiNotConnectedMessage.text = activity.resources.getString(R.string.text_view_dialog_wifi_not_connected_message)
 
         textViewDialogWifiNotConnectedError = findViewById(R.id.textViewDialogWifiNotConnectedError)
         textViewDialogWifiNotConnectedError.text = activity.resources.getString(R.string.text_view_dialog_wifi_not_connected_error)
+
+
     }
 }
