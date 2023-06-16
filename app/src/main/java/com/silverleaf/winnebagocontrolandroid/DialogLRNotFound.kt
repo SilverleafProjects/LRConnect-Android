@@ -9,6 +9,10 @@ import android.view.Window
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
+import webviewsettings.setWebView
+
+private fun callScanForLR125(activity: MainActivity) = activity.scanNetwork()
 
 class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogLRNotFoundRescan: Button
@@ -38,10 +42,25 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
 
         buttonDialogLRNotFoundRescan = findViewById(R.id.buttonDialogLRNotFoundRescan)
         buttonDialogLRNotFoundRescan.setOnClickListener {
-            MainActivity.callScanNetworkOnDialogClose = true
-            this.cancel()
-        }
+            try {
+                MainActivity.LRConnectCalledFromSettingsMenu = true
+                callScanForLR125(MainActivity())
+            }catch(e:Exception){
+                e.printStackTrace()
+            }
+            if(ipAddress != null) {
+                webView.post(Runnable {
+                    var address = ipAddress.replace("/", "")
+                    webView.loadUrl("$address")
+                })
+                MainActivity.LRConnectCalledFromSettingsMenu = false
+                this.cancel()
+            }else{
+                MainActivity.LRConnectCalledFromSettingsMenu = true
+                callScanForLR125(MainActivity())
+            }
 
+        }
         buttonDialogLRNotFoundCloud = findViewById(R.id.lrNotFoundGoToCloud)
         buttonDialogLRNotFoundCloud.setOnClickListener {
             MainActivity.callScanNetworkOnDialogClose = false

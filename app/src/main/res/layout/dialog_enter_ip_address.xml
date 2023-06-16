@@ -39,18 +39,24 @@
         android:id="@+id/buttonDialogEnterIPAddressAccept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:text="@string/button_dialog_enter_ip_address_accept"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/button_dialog_enter_ip_address_accept" />
 
     <Button
         android:id="@+id/buttonDialogEnterIPAddressCancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:text="@string/button_dialog_enter_ip_address_cancel"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/button_dialog_enter_ip_address_cancel" />
 
 </RelativeLayout>
