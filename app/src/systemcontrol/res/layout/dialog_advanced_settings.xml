@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/advancedSettingsLayout"
+    android:layout_gravity="fill"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:layout_alignParentStart="true"
+    >
+
+    <TextView
+        android:id="@+id/textViewDialogChangeAdvancedSettingsTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="System Control Settings"
+        android:textColor="@color/text_color"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/buttonAdvancedSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewDialogChangeAdvancedSettingsTitle"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:layout_marginTop="10dp"
+        android:text="Advanced Settings"
+        android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/buttonOemSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonAdvancedSettings"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:layout_marginTop="10dp"
+        android:text="OEM Settings"
+        android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/buttonConnectionSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonOemSettings"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:text="Connection Settings"
+        android:textSize="10sp" />
+
+
+    <TextView
+        android:id="@+id/textViewAdvancedFeatures"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonConnectionSettings"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="Advanced Features"
+        android:textColor="@color/black"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/textViewEnableScreen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewAdvancedFeatures"
+        android:layout_marginLeft="5mm"
+        android:layout_alignParentLeft="true"
+        android:text="Screen Always On"
+        android:textColor="@color/black"
+        android:textSize="13sp" />
+
+
+    <TextView
+        android:id="@+id/screenStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewEnableScreen"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="30dp"
+        android:textColor="@color/powder_blue"
+        android:textSize="12sp" />
+
+
+    <Button
+        android:id="@+id/enableScreenAlwaysOn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/screenStatus"
+        android:gravity="center"
+        android:layout_marginLeft="30dp"
+        android:text="Enable"
+        android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/disableScreenAlwaysOn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/enableScreenAlwaysOn"
+        android:layout_gravity="center"
+        android:layout_marginLeft="30dp"
+        android:text="Disable"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/textViewEnableCloud"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewAdvancedFeatures"
+        android:layout_marginRight="4dp"
+        android:layout_alignParentRight="true"
+        android:text="Enable Cloud Features"
+        android:textColor="@color/black"
+        android:textSize="13sp" />
+
+
+    <TextView
+        android:id="@+id/cloudStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewEnableCloud"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="30dp"
+        android:textColor="@color/powder_blue"
+        android:textSize="12sp" />
+
+
+    <Button
+        android:id="@+id/enableCloudFeatures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cloudStatus"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:gravity="center"
+        android:text="Enable"
+        android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/disableCloudFeatures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/enableCloudFeatures"
+        android:layout_marginRight="30dp"
+        android:layout_alignParentRight="true"
+        android:gravity="center"
+        android:text="Disable"
+        android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/returnToAppButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:layout_marginRight="80dp"
+        android:layout_marginBottom="15dp"
+        android:layout_alignParentBottom="true"
+        android:text="Cancel"/>
+
+</RelativeLayout>
