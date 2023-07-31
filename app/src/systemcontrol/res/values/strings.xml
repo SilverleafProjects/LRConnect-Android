@@ -7,6 +7,7 @@
     <string name="stored_ip_address">storedIpAddress</string>
     <string name="route_admin">admin</string>
     <string name="route_network">network</string>
+    <string name="app_bundle_name">com.silverleaf.lrgizmo</string>
     <string name="route_oem">oem</string>
     <string name="text_view_dialog_enter_ip_address">Enter IP Address</string>
     <string name="button_dialog_enter_ip_address_accept">Accept</string>

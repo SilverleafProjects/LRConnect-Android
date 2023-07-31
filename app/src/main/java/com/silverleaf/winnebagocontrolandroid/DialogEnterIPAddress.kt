@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
+import com.silverleaf.lrgizmo.R
 import preferences.Preferences
 import java.net.InetAddress
 import java.net.UnknownHostException

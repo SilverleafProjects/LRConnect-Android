@@ -61,7 +61,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/buttonConnectionSettings"
         android:gravity="center_horizontal"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="9dp"
         android:text="Advanced Features"
         android:textColor="@color/black"
         android:textSize="15sp" />
@@ -71,8 +71,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewAdvancedFeatures"
-        android:layout_marginLeft="5mm"
         android:layout_alignParentLeft="true"
+        android:layout_marginLeft="30dp"
         android:text="Screen Always On"
         android:textColor="@color/black"
         android:textSize="13sp" />
@@ -80,32 +80,35 @@
 
     <TextView
         android:id="@+id/screenStatus"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewEnableScreen"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="30dp"
+        android:layout_marginLeft="47dp"
         android:textColor="@color/powder_blue"
         android:textSize="12sp" />
 
 
     <Button
         android:id="@+id/enableScreenAlwaysOn"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/screenStatus"
         android:gravity="center"
-        android:layout_marginLeft="30dp"
+        android:layout_marginLeft="40dp"
         android:text="Enable"
         android:textSize="10sp" />
 
     <Button
         android:id="@+id/disableScreenAlwaysOn"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/enableScreenAlwaysOn"
         android:layout_gravity="center"
-        android:layout_marginLeft="30dp"
+        android:layout_marginLeft="40dp"
         android:text="Disable"
         android:textSize="10sp" />
 
@@ -114,7 +117,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewAdvancedFeatures"
-        android:layout_marginRight="4dp"
+        android:layout_marginRight="20dp"
         android:layout_alignParentRight="true"
         android:text="Enable Cloud Features"
         android:textColor="@color/black"
@@ -123,33 +126,36 @@
 
     <TextView
         android:id="@+id/cloudStatus"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewEnableCloud"
         android:layout_alignParentRight="true"
         android:layout_marginTop="10dp"
-        android:layout_marginRight="30dp"
+        android:layout_marginRight="47dp"
         android:textColor="@color/powder_blue"
         android:textSize="12sp" />
 
 
     <Button
         android:id="@+id/enableCloudFeatures"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/cloudStatus"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
+        android:layout_marginRight="40dp"
         android:gravity="center"
         android:text="Enable"
         android:textSize="10sp" />
 
     <Button
         android:id="@+id/disableCloudFeatures"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/enableCloudFeatures"
-        android:layout_marginRight="30dp"
+        android:layout_marginRight="40dp"
         android:layout_alignParentRight="true"
         android:gravity="center"
         android:text="Disable"

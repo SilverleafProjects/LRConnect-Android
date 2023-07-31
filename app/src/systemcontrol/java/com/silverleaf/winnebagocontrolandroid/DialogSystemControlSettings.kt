@@ -8,6 +8,7 @@ import android.webkit.WebView
 import android.widget.Button
 import android.widget.RelativeLayout
 import android.widget.TextView
+import com.silverleaf.lrgizmo.R
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.screenAlwaysOn
 
 private var ipAddress: String = MainActivity.ipAddress

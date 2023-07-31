@@ -8,6 +8,7 @@ import android.view.Window
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
+import com.silverleaf.lrgizmo.R
 
 class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogConnectToCloudConnect: Button

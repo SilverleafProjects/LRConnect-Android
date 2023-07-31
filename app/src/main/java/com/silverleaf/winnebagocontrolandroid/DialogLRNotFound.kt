@@ -9,6 +9,7 @@ import android.view.Window
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
+import com.silverleaf.lrgizmo.R
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
 import webviewsettings.setWebView
 

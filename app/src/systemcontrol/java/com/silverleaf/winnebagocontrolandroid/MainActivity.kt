@@ -28,6 +28,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
+import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.*
 import preferences.Preferences
 import scannetwork.MdnsHandler
@@ -53,7 +54,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var progressBar: ProgressBar
 
     var dialogSide: Int = 0
-
 
     private val viewModel: ScreenStatusViewModel by viewModels()
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
@@ -81,7 +81,6 @@ class MainActivity : AppCompatActivity() {
         var callScanNetworkOnDialogClose: Boolean = false
         var internetAvailable: Boolean = false
         lateinit var preferences: Preferences
-        lateinit var relativeLayout: RelativeLayout
 
         fun saveTokenToPreferences(token: String) {
             preferences.saveString("token", token)
@@ -162,12 +161,11 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.main_page -> returnToHomeScreen("")
             R.id.refresh -> refreshPage()
-            R.id.scan_network -> scanNetworkForLR()
+            R.id.scan_network -> scanNetworkFromMenu()
             R.id.enter_ip_address -> showDialogEnterIPAddress()
             R.id.clear_cache -> clearBrowserCache()
             R.id.admin_page -> appendToIPAddress(resources.getString(R.string.route_admin))
@@ -196,7 +194,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun requestLocationPermission(): Int {
+    private fun requestLocationPermission(): Int {
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -244,10 +242,9 @@ class MainActivity : AppCompatActivity() {
             LRConnectCalledFromSettingsMenu = false
         }
         else setIPAddressToLR125(route)
-
     }
 
-    private fun scanNetworkForLR(route: String = "") {
+    private fun scanNetworkFromMenu(route: String = "") {
         if(!wifiIsEnabled()){
             showDialogWifiNotEnabled()
         }else{

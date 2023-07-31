@@ -9,6 +9,7 @@ import android.view.Window
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
+import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
