@@ -2,6 +2,8 @@ package com.silverleaf.winnebagocontrolandroid
 
 import android.app.Activity
 import android.app.Dialog
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -10,11 +12,48 @@ import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
 import com.silverleaf.lrgizmo.R
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.NSDListener
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.callScanNetworkOnDialogClose
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lr125DataStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import webviewsettings.setWebView
+import java.net.DatagramPacket
+import java.net.SocketTimeoutException
 
-private fun callScanForLR125(activity: MainActivity) = activity.scanNetwork()
 
+private fun convertByteArray(byteArray: ByteArray): String {
+    var returnString: String = ""
+    for (byte in byteArray) returnString += byte.toInt().toChar()
+    return returnString
+}
+private fun compareTimeStamps(savedDate: Long, currentDate: Long): Boolean {
+    return (currentDate - savedDate) < 60
+}
+private fun isValidSilverLeafDevice(messageString: String): Boolean {
+    return (messageString.contains("LR125")) || (messageString.contains("RVHALO"))
+}
+private fun scanForLR125(){
+    MainActivity.udpListenerSocket.soTimeout = 5000
+    try{
+        val buffer = ByteArray(4096)
+        val timestamp = System.currentTimeMillis() / 1000
+        val udpPacket = DatagramPacket(buffer, buffer.size)
+
+        MainActivity.udpListenerSocket.receive(udpPacket)
+
+        var incomingAddress = udpPacket.address
+        var incomingMessage = convertByteArray(udpPacket.data)
+
+        var timestampedPacket = Pair(first = timestamp, second = incomingMessage)
+
+        lr125DataStorage.put(incomingAddress, timestampedPacket)
+    }catch(e: SocketTimeoutException){
+        e.printStackTrace()
+    }
+}
 class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogLRNotFoundRescan: Button
     private lateinit var buttonDialogLRNotFoundCloud: Button
@@ -43,6 +82,41 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
 
         buttonDialogLRNotFoundRescan = findViewById(R.id.buttonDialogLRNotFoundRescan)
         buttonDialogLRNotFoundRescan.setOnClickListener {
+
+
+            try {
+                CoroutineScope(Dispatchers.IO).launch{scanForLR125()}
+            }catch(e:Exception){
+                e.printStackTrace()
+            }
+            if(MainActivity.lr125DataStorage.isNotEmpty()) {
+                println("Size: ${lr125DataStorage.size}")
+                for (entry in MainActivity.lr125DataStorage) {
+                    if (compareTimeStamps(
+                            entry.value!!.first,
+                            (System.currentTimeMillis() / 1000)
+                        )
+                    ){
+                        if (isValidSilverLeafDevice(entry.value!!.second))
+                        {
+                            MainActivity.ipAddress = entry.key.toString()
+
+                            webView.post(Runnable {
+                                var address = ipAddress.replace("/", "")
+                                println("IP Address: $address")
+                                webView.loadUrl("$address")
+                            })
+                        }
+                    }
+                }
+                MainActivity.closeLRDiscoveryDialog = true
+                this.cancel()
+            }else{
+
+                MainActivity.closeLRDiscoveryDialog = true
+                this.cancel()
+            }
+            /*
             try {
                 MainActivity.LRConnectCalledFromSettingsMenu = true
                 callScanForLR125(MainActivity())
@@ -56,11 +130,15 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
                 })
                 MainActivity.LRConnectCalledFromSettingsMenu = false
                 this.cancel()
+            }else if(MainActivity.noDetectedLROnNetwork){
+                Log.d("Test Point","No Detected LR On Network")
+                MainActivity.LRConnectCalledFromSettingsMenu = false
+                this.cancel()
             }else{
                 MainActivity.LRConnectCalledFromSettingsMenu = true
                 callScanForLR125(MainActivity())
             }
-
+*/
         }
         buttonDialogLRNotFoundCloud = findViewById(R.id.lrNotFoundGoToCloud)
         buttonDialogLRNotFoundCloud.setOnClickListener {
