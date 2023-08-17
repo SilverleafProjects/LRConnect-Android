@@ -96,6 +96,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        NSDManager = getSystemService(Context.NSD_SERVICE) as NsdManager
+
         preferences = Preferences(this)
         if (preferences.retrieveString("token") != null) {
             val token = preferences.retrieveString("token")
