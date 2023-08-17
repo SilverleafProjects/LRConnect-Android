@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
 
             R.id.main_page -> returnToHomeScreen("")
             R.id.refresh -> refreshPage()
-            R.id.scan_network -> callScanNetworkFromMainMenu("")
+            R.id.scan_network -> scanNetwork("")
             R.id.enter_ip_address -> showDialogEnterIPAddress()
             R.id.clear_cache -> clearBrowserCache()
             R.id.admin_page -> appendToIPAddress(resources.getString(R.string.route_admin))
@@ -331,6 +331,8 @@ class MainActivity : AppCompatActivity() {
         val currentTime = System.currentTimeMillis() / 1000
         var failedToFindLR125 = true
 
+        timeoutIfLRIsNotDetected()
+
         if (lr125DataStorage.isNotEmpty() && !usingMDNSLookup)
         {
             dialogNetworkScanInProgress?.cancel()
@@ -429,7 +431,7 @@ class MainActivity : AppCompatActivity() {
             }
         }, 5, TimeUnit.SECONDS)
     }
-    /** ** *********************************************** ** **/
+    /*******************************************************/
     private fun isValidSilverLeafDevice(messageString: String): Boolean {
         return (messageString.contains("LR125")) || (messageString.contains("RVHALO"))
     }

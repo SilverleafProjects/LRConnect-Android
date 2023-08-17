@@ -7,10 +7,7 @@ import android.os.Bundle
 import android.view.Window
 import android.widget.TextView
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
     private lateinit var textViewDialogNetworkScanInProgressMessage: TextView
@@ -36,9 +33,13 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
                 counter++
                 setMessageText(counter)
                 delay(600)
+
+                println("Closing Either Dialog or Coroutine")
+                if(MainActivity.ipAddress != "") super.cancel()
             }
         }
     }
+
 
     override fun cancel() {
         this.dialogNotCancelled = false

@@ -9,9 +9,12 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.*
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -67,9 +70,21 @@ class MainActivity : AppCompatActivity() {
         const val FILE_RESULT_CODE: Int = 69
         const val PERMISSION_CODE_ACCEPTED = 1
         const val PERMISSION_CODE_NOT_AVAILABLE = 0
-        var callScanNetworkOnDialogClose: Boolean = false
         var internetAvailable: Boolean = false
+        var failedToDiscoverLR: Boolean = true
         lateinit var preferences: Preferences
+        val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
+
+        /* Sentinel values used between classes */
+        var callScanNetworkOnDialogClose: Boolean = false
+        var closeLRDiscoveryDialog: Boolean = false
+        var noDetectedLROnNetwork: Boolean = false
+
+        /* Declarations for NSD Manager*/
+        var usingMDNSLookup: Boolean = false
+        lateinit var NSDManager: NsdManager
+        var NSDListener: DiscoveryListener = DiscoveryListener()
+        val lrDetectCoroutine = CoroutineScope(Dispatchers.IO)
 
         fun saveTokenToPreferences(token: String) {
             preferences.saveString("token", token)
@@ -176,7 +191,8 @@ class MainActivity : AppCompatActivity() {
         udpListenerIsNotRunning = false
     }
 
-    fun scanNetwork(route: String = "") {
+
+    fun scanhNetwork(route: String = "") {
         if ((udpListenerIsNotRunning) || (lr125DataStorage.isEmpty())) startUDPListenerThread()
         while (lr125DataStorage.isEmpty()) {
             if (lr125DataStorage.isNotEmpty()) break
@@ -189,6 +205,117 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    fun scanNetwork(route: String=""){
+        runOnUiThread {
+            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+            dialogNetworkScanInProgress?.show()
+            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+        }
+
+        udpDetectCoroutine.launch {
+            udpMessageListener()
+            println("lr125: ${lr125DataStorage.isEmpty()}")
+            while (lr125DataStorage.isEmpty()){
+                Log.d("Test Point", "While Loop")
+                if (lr125DataStorage.isNotEmpty()) break
+            }
+        }
+
+
+        if(noDetectedLROnNetwork){
+            usingMDNSLookup = true
+            lrDetectCoroutine.launch {
+                NSDManager.discoverServices(
+                    "_http._tcp",
+                    NsdManager.PROTOCOL_DNS_SD,
+                    NSDListener
+                )
+            }
+        }
+
+        Handler().postDelayed({
+            if(lr125DataStorage.isEmpty() && (NSDListener.serviceList.size == 0)){
+                showDialogLRNotFound()
+            }
+            else {
+                setIPAddressToLR125(route)
+            }
+        },4000)
+    }
+
+    private fun setIPAddressToLR125(route: String = "") {
+
+        if (dialogLRNotFound?.isShowing == true) {
+            dialogLRNotFound?.dismiss()
+        }
+        if (dialogNetworkScanInProgress?.isShowing == true) {
+            dialogNetworkScanInProgress?.dismiss()
+        }
+
+        val currentTime = System.currentTimeMillis() / 1000
+        var failedToFindLR125 = true
+
+        timeoutIfLRIsNotDetected()
+
+        if (lr125DataStorage.isNotEmpty() && !usingMDNSLookup)
+        {
+            dialogNetworkScanInProgress?.cancel()
+            callScanNetworkOnDialogClose = false
+            for (entry in lr125DataStorage) {
+                if (compareTimeStamps(entry?.value!!.first, currentTime)) {
+                    if (ipAddressIsValid(entry.key.toString())) {
+                        if (isValidSilverLeafDevice(entry.value!!.second)) {
+                            ipAddress = entry.key.toString()
+                            loadURL("$ipAddress/$route")
+                            failedToFindLR125 = false
+                            failedToDiscoverLR = false
+
+                            if (dialogNetworkScanInProgress?.isShowing == true) {
+                                dialogNetworkScanInProgress?.dismiss()
+                                callScanNetworkOnDialogClose = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if(NSDListener.serviceList.size > 0 && usingMDNSLookup)
+        {
+            var firstDetectedLR = NSDListener.serviceList[0]
+            try {
+                var nsdResolveListener: NsdManager.ResolveListener = object : NsdManager.ResolveListener {
+                    override fun onResolveFailed(detectedLR: NsdServiceInfo?, p1: Int) {
+                        failedToFindLR125 = true
+                    }
+                    override fun onServiceResolved(detectedLR: NsdServiceInfo?) {
+                        if(detectedLR != null) loadURL(detectedLR.host.toString())
+                    }
+                }
+                NSDManager.resolveService(firstDetectedLR, nsdResolveListener)
+                NSDManager.stopServiceDiscovery(NSDListener)
+
+                if (dialogNetworkScanInProgress?.isShowing == true) {
+                    dialogNetworkScanInProgress?.dismiss()
+                    callScanNetworkOnDialogClose = false
+                }
+
+                failedToFindLR125 = false
+                failedToDiscoverLR = false
+            }catch(e: Exception){
+                e.printStackTrace()
+            }
+        }
+        if (failedToFindLR125) {
+            callScanNetworkOnDialogClose = false
+            dialogNetworkScanInProgress?.cancel()
+            showDialogLRNotFound()
+        }
+    }
+
+
+
+/*
     private fun setIPAddressToLR125(route: String = "") {
         if (dialogLRNotFound?.isShowing == true) {
             dialogLRNotFound?.dismiss()
@@ -264,7 +391,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-
+*/
     private fun findLR125WithoutConnection(route: String = ""): Unit{
 
         val currentTime = System.currentTimeMillis() / 1000
@@ -352,7 +479,8 @@ class MainActivity : AppCompatActivity() {
             webView.loadUrl("$protocol$url")
         })
     }
-
+//I'm keeping this section if we ever decide to use a more modern way of determining internet connection. (requires minSDK of 23)
+/*
     fun isInternetAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if(connectivityManager != null) {
@@ -365,6 +493,17 @@ class MainActivity : AppCompatActivity() {
         }
         return false
     }
+*/
+
+    fun isInternetAvailable(): Boolean {
+        return try {
+            val ipAddr: InetAddress = InetAddress.getByName("google.com")
+            //You can replace it with your name
+            !ipAddr.equals("")
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     /***
      * TODO: Make sure R.string.url_cloud is correct
@@ -373,7 +512,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun navigateToCloud() {
             webView.post(Runnable {
-                if (isInternetAvailable(applicationContext)) {
+                if (isInternetAvailable()) { //isInternetAvailable(applicationContext)
                     val urlCloud: String = resources.getString(R.string.url_cloud)
                     webView.loadUrl(urlCloud)
                 } else {
@@ -576,7 +715,7 @@ class MainActivity : AppCompatActivity() {
                                 showDialogConnectToCloud()
                                 network
                             }
-                            internetAvailable = isInternetAvailable(applicationContext)
+                            internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
                             Log.d("Avail 1", internetAvailable.toString())
                         } else {
                             if (dialogConnectToCloud?.isShowing ?: false) {
@@ -594,7 +733,7 @@ class MainActivity : AppCompatActivity() {
                                 scanNetwork()
                                 network
                             }
-                            internetAvailable = isInternetAvailable(applicationContext)
+                            internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
                             Log.d("Avail 2", internetAvailable.toString())
                         }
                         super.onCapabilitiesChanged(network, networkCapabilities)

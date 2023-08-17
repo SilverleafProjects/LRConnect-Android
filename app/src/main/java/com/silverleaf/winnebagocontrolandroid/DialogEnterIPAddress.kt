@@ -37,7 +37,6 @@ class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activit
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_enter_ip_address)
-        MainActivity.noDetectedLROnNetwork = false
         bindUI()
     }
 

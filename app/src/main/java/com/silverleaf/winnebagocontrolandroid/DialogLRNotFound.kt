@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.TextView
 import com.silverleaf.lrgizmo.R
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.NSDListener
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.NSDManager
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.callScanNetworkOnDialogClose
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lr125DataStorage
@@ -54,6 +55,15 @@ private fun scanForLR125(){
         e.printStackTrace()
     }
 }
+
+private fun scanForNSD(){
+    NSDManager.discoverServices(
+        "_http._tcp",
+        NsdManager.PROTOCOL_DNS_SD,
+        NSDListener
+    )
+}
+
 class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogLRNotFoundRescan: Button
     private lateinit var buttonDialogLRNotFoundCloud: Button
@@ -111,8 +121,25 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
                 }
                 MainActivity.closeLRDiscoveryDialog = true
                 this.cancel()
-            }else{
+            }else if(MainActivity.lr125DataStorage.isEmpty()){
+                var firstDetectedLR = NSDListener.serviceList[0]
+                    var nsdResolveListener: NsdManager.ResolveListener =
+                        object : NsdManager.ResolveListener {
+                            override fun onResolveFailed(detectedLR: NsdServiceInfo?, p1: Int) {
+                                MainActivity.closeLRDiscoveryDialog = true
+                            }
 
+                            override fun onServiceResolved(detectedLR: NsdServiceInfo?) {
+                                if (detectedLR != null) webView.loadUrl(detectedLR.host.toString())
+                            }
+                        }
+                        NSDManager.resolveService(firstDetectedLR, nsdResolveListener)
+                        NSDManager.stopServiceDiscovery(NSDListener)
+
+                        MainActivity.failedToDiscoverLR = false
+                        this.cancel()
+
+            }else{
                 MainActivity.closeLRDiscoveryDialog = true
                 this.cancel()
             }
