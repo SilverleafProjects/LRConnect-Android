@@ -15,8 +15,11 @@ import com.silverleaf.lrgizmo.R
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.NSDListener
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.NSDManager
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.callScanNetworkOnDialogClose
+
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lr125DataStorage
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lrDiscoveryDialog
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.noDetectedLROnNetwork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,6 +75,7 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
 
     private var webView: WebView
     private var activity: Activity
+    var deleteWhenTestingFinished: Boolean = true
     init {
         setCancelable(false);
         webView.also{ this.webView = it }
@@ -92,13 +96,19 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
 
         buttonDialogLRNotFoundRescan = findViewById(R.id.buttonDialogLRNotFoundRescan)
         buttonDialogLRNotFoundRescan.setOnClickListener {
-
-
+/*
             try {
                 CoroutineScope(Dispatchers.IO).launch{scanForLR125()}
             }catch(e:Exception){
                 e.printStackTrace()
             }
+            try{
+                CoroutineScope(Dispatchers.IO).launch { scanForNSD() }
+            }catch(e:Exception){
+                e.printStackTrace()
+            }
+*/
+            var checkpoint: Boolean = false
             if(MainActivity.lr125DataStorage.isNotEmpty()) {
                 println("Size: ${lr125DataStorage.size}")
                 for (entry in MainActivity.lr125DataStorage) {
@@ -119,14 +129,15 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
                         }
                     }
                 }
-                MainActivity.closeLRDiscoveryDialog = true
+                MainActivity.lrDiscoveryDialog = true
                 this.cancel()
-            }else if(MainActivity.lr125DataStorage.isEmpty()){
+            }else if(NSDListener.serviceList.isNotEmpty()){
+
                 var firstDetectedLR = NSDListener.serviceList[0]
                     var nsdResolveListener: NsdManager.ResolveListener =
                         object : NsdManager.ResolveListener {
                             override fun onResolveFailed(detectedLR: NsdServiceInfo?, p1: Int) {
-                                MainActivity.closeLRDiscoveryDialog = true
+                                MainActivity.lrDiscoveryDialog = true
                             }
 
                             override fun onServiceResolved(detectedLR: NsdServiceInfo?) {
@@ -140,8 +151,7 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
                         this.cancel()
 
             }else{
-                MainActivity.closeLRDiscoveryDialog = true
-                this.cancel()
+                textViewNoInternet.visibility = View.VISIBLE
             }
             /*
             try {
@@ -184,6 +194,8 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
 
         buttonCancel = findViewById(R.id.returnButton)
         buttonCancel.setOnClickListener{
+            callScanNetworkOnDialogClose = false
+            lrDiscoveryDialog = false
             this.cancel()
         }
 

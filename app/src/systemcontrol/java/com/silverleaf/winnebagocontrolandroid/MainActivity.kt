@@ -24,6 +24,8 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.ProgressBar
+import android.widget.Toast
+import android.widget.Toast.makeText
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -48,10 +50,6 @@ class ScreenStatusViewModel : ViewModel() {
         val currentStatus: MutableLiveData<Boolean> by lazy {
             MutableLiveData<Boolean>()
         }
-}
-
-class LrHostnameNotFoundException : java.lang.Exception(){
-
 }
 
 class MainActivity : AppCompatActivity() {
@@ -90,7 +88,7 @@ class MainActivity : AppCompatActivity() {
 
         /* Sentinel values used between classes */
         var callScanNetworkOnDialogClose: Boolean = false
-        var closeLRDiscoveryDialog: Boolean = false
+        var lrDiscoveryDialog: Boolean = true
         var noDetectedLROnNetwork: Boolean = false
 
         /* Declarations for NSD Manager*/
@@ -117,7 +115,6 @@ class MainActivity : AppCompatActivity() {
             val token = preferences.retrieveString("token")
             println("Found token: $token")
         }
-
 
         try {
             if (preferences.retrieveBoolean("screenAlwaysOnStatus") != null) {
@@ -262,27 +259,26 @@ class MainActivity : AppCompatActivity() {
                     NSDListener
                 )
             }
-        Log.d("Test Point", "End Of Function Reached")
         return
     }
 
 
     fun scanNetwork(route: String=""){
-        runOnUiThread {
-            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
-            dialogNetworkScanInProgress?.show()
-            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+
+        if(lrDiscoveryDialog) {
+            runOnUiThread {
+                dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+                dialogNetworkScanInProgress?.show()
+                dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+            }
         }
 
-            udpDetectCoroutine.launch {
+        udpDetectCoroutine.launch {
                 udpMessageListener()
-                println("lr125: ${lr125DataStorage.isEmpty()}")
                 while (lr125DataStorage.isEmpty()){
-                    Log.d("Test Point", "While Loop")
                     if (lr125DataStorage.isNotEmpty()) break
                 }
-            }
-
+        }
 
         if(noDetectedLROnNetwork){
             usingMDNSLookup = true

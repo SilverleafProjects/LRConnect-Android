@@ -193,7 +193,7 @@ class MainActivity : AppCompatActivity() {
         udpListenerIsNotRunning = false
     }
 
-
+/*
     fun scanhNetwork(route: String = "") {
         if ((udpListenerIsNotRunning) || (lr125DataStorage.isEmpty())) startUDPListenerThread()
         while (lr125DataStorage.isEmpty()) {
@@ -206,6 +206,7 @@ class MainActivity : AppCompatActivity() {
         else setIPAddressToLR125(route)
 
     }
+*/
 
     fun scanNetwork(route: String=""){
         runOnUiThread {
@@ -218,11 +219,9 @@ class MainActivity : AppCompatActivity() {
             udpMessageListener()
             println("lr125: ${lr125DataStorage.isEmpty()}")
             while (lr125DataStorage.isEmpty()){
-                Log.d("Test Point", "While Loop")
                 if (lr125DataStorage.isNotEmpty()) break
             }
         }
-
 
         if(noDetectedLROnNetwork){
             usingMDNSLookup = true
