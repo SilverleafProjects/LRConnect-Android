@@ -24,8 +24,6 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.ProgressBar
-import android.widget.Toast
-import android.widget.Toast.makeText
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -35,10 +33,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import preferences.Preferences
 import webviewsettings.setWebView
-import java.lang.Runnable
 import java.net.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -88,8 +88,9 @@ class MainActivity : AppCompatActivity() {
 
         /* Sentinel values used between classes */
         var callScanNetworkOnDialogClose: Boolean = false
-        var lrDiscoveryDialog: Boolean = true
+        //var lrDiscoveryDialog: Boolean = true
         var noDetectedLROnNetwork: Boolean = false
+        var goToCloud: Boolean = false
 
         /* Declarations for NSD Manager*/
         var usingMDNSLookup: Boolean = false
@@ -113,7 +114,6 @@ class MainActivity : AppCompatActivity() {
         preferences = Preferences(this)
         if (preferences.retrieveString("token") != null) {
             val token = preferences.retrieveString("token")
-            println("Found token: $token")
         }
 
         try {
@@ -156,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
     }
 
     fun toggleScreenStatus(status: Boolean) {
@@ -262,17 +263,15 @@ class MainActivity : AppCompatActivity() {
         return
     }
 
-
     fun scanNetwork(route: String=""){
 
-        if(lrDiscoveryDialog) {
-            runOnUiThread {
-                dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
-                dialogNetworkScanInProgress?.show()
-                dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
-            }
+        runOnUiThread {
+            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+            dialogNetworkScanInProgress?.show()
+            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
         }
 
+        timeoutIfLRIsNotDetected()
         udpDetectCoroutine.launch {
                 udpMessageListener()
                 while (lr125DataStorage.isEmpty()){
@@ -301,20 +300,6 @@ class MainActivity : AppCompatActivity() {
         },4000)
     }
 
-    private fun callScanNetworkFromMainMenu(route: String = "") {
-        if(!wifiIsEnabled()){
-            showDialogWifiNotEnabled()
-        }else{
-            if ((udpListenerIsNotRunning) || (lr125DataStorage.isEmpty()) && !usingMDNSLookup){
-                startUDPListenerThread()
-            }
-            while (lr125DataStorage.isEmpty()) {
-                if (lr125DataStorage.isNotEmpty()) break
-            }
-            setIPAddressToLR125(route)
-        }
-    }
-
     private fun setIPAddressToLR125(route: String = "") {
 
         if (dialogLRNotFound?.isShowing == true) {
@@ -332,7 +317,6 @@ class MainActivity : AppCompatActivity() {
         if (lr125DataStorage.isNotEmpty() && !usingMDNSLookup)
         {
             dialogNetworkScanInProgress?.cancel()
-            callScanNetworkOnDialogClose = false
             for (entry in lr125DataStorage) {
                 if (compareTimeStamps(entry?.value!!.first, currentTime)) {
                     if (ipAddressIsValid(entry.key.toString())) {
@@ -344,7 +328,6 @@ class MainActivity : AppCompatActivity() {
 
                             if (dialogNetworkScanInProgress?.isShowing == true) {
                                 dialogNetworkScanInProgress?.dismiss()
-                                callScanNetworkOnDialogClose = false
                             }
                         }
                     }
@@ -369,7 +352,6 @@ class MainActivity : AppCompatActivity() {
 
                 if (dialogNetworkScanInProgress?.isShowing == true) {
                     dialogNetworkScanInProgress?.dismiss()
-                    callScanNetworkOnDialogClose = false
                 }
 
                 failedToFindLR125 = false
@@ -379,12 +361,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         if (failedToFindLR125) {
-            callScanNetworkOnDialogClose = false
             dialogNetworkScanInProgress?.cancel()
             showDialogLRNotFound()
         }
     }
-
 
     private fun udpMessageListener(): Unit {
 
@@ -419,11 +399,9 @@ class MainActivity : AppCompatActivity() {
         backgroundExecutor.schedule({
             if ((dialogNetworkScanInProgress?.isShowing == true) && (ipAddress == "")) {
                 dialogNetworkScanInProgress!!.cancel()
-                callScanNetworkOnDialogClose = false
                 dialogLRNotFound?.show()
             } else {
                 dialogNetworkScanInProgress!!.cancel()
-                callScanNetworkOnDialogClose = false
             }
         }, 5, TimeUnit.SECONDS)
     }
@@ -465,13 +443,8 @@ fun isInternetAvailable(context: Context): Boolean {
 */
 
     fun isInternetAvailable(): Boolean {
-        return try {
-            val ipAddr: InetAddress = InetAddress.getByName("google.com")
-            //You can replace it with your name
-            !ipAddr.equals("")
-        } catch (e: Exception) {
-            false
-        }
+        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        return wifiManager.isWifiEnabled
     }
 
     /***
@@ -482,7 +455,7 @@ fun isInternetAvailable(context: Context): Boolean {
     private fun navigateToCloud() {
         if(cloudServiceStatus) {
             webView.post(Runnable {
-                if (isInternetAvailable()) { //isInternetAvailable(applicationContext)
+                if (isInternetAvailable()) {
                     val urlCloud: String = resources.getString(R.string.url_cloud)
                     webView.loadUrl(urlCloud)
                 } else {
@@ -562,6 +535,7 @@ fun isInternetAvailable(context: Context): Boolean {
                 scanNetwork()
             }
         }
+
     }
 
     private fun showDialogLRNotFound() {
@@ -573,9 +547,19 @@ fun isInternetAvailable(context: Context): Boolean {
        dialogLRNotFound = DialogLRNotFound(this, webView)
         dialogLRNotFound?.show()
         dialogLRNotFound?.window?.setLayout(widthDialog, heightDialog)
+
+
         dialogLRNotFound?.setOnCancelListener {
             if(callScanNetworkOnDialogClose) {
                 scanNetwork()
+            }
+            if(goToCloud){
+                if (dialogLRNotFound?.isShowing == true) {
+                    dialogLRNotFound?.dismiss()
+                }
+                if (dialogNetworkScanInProgress?.isShowing == true) {
+                    dialogNetworkScanInProgress?.dismiss()
+                }
             }
         }
     }

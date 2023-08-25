@@ -27,15 +27,13 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
 
         bindUI()
 
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             var counter = 0
             while(dialogNotCancelled) {
                 counter++
                 setMessageText(counter)
                 delay(600)
 
-                println("Closing Either Dialog or Coroutine")
-                if(MainActivity.ipAddress != "") super.cancel()
             }
         }
     }

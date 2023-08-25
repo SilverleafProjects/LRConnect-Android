@@ -77,8 +77,8 @@ class MainActivity : AppCompatActivity() {
 
         /* Sentinel values used between classes */
         var callScanNetworkOnDialogClose: Boolean = false
-        var closeLRDiscoveryDialog: Boolean = false
         var noDetectedLROnNetwork: Boolean = false
+        var goToCloud: Boolean = false
 
         /* Declarations for NSD Manager*/
         var usingMDNSLookup: Boolean = false
@@ -217,7 +217,6 @@ class MainActivity : AppCompatActivity() {
 
         udpDetectCoroutine.launch {
             udpMessageListener()
-            println("lr125: ${lr125DataStorage.isEmpty()}")
             while (lr125DataStorage.isEmpty()){
                 if (lr125DataStorage.isNotEmpty()) break
             }
@@ -314,85 +313,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-/*
-    private fun setIPAddressToLR125(route: String = "") {
-        if (dialogLRNotFound?.isShowing == true) {
-            dialogLRNotFound?.dismiss()
-        }
-        if (dialogNetworkScanInProgress?.isShowing == true) {
-            dialogNetworkScanInProgress?.dismiss()
-        }
-        runOnUiThread {
-            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
-            dialogNetworkScanInProgress?.show()
-            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
-        }
-
-        val currentTime = System.currentTimeMillis() / 1000
-        var failedToFindLR125 = true
-
-        timeoutIfLRIsNotDetected()
-
-        Log.d("Test Point", "TP1")
-        if (lr125DataStorage.isNotEmpty()) {
-            Log.d("Test Point", "TP2")
-            dialogNetworkScanInProgress?.cancel()
-            callScanNetworkOnDialogClose = false
-
-            for (entry in lr125DataStorage) {
-                if (compareTimeStamps(entry?.value!!.first, currentTime)) {
-                    if (ipAddressIsValid(entry.key.toString())) {
-                        if (isValidSilverLeafDevice(entry.value!!.second)) {
-                            ipAddress = entry.key.toString()
-                            loadURL("$ipAddress/$route")
-                            failedToFindLR125 = false
-                            break
-                        }
-                    }
-                }
-            }
-        }
-        if (failedToFindLR125 && (lr125DataStorage.isEmpty())) {
-            val mdnsHandler = MdnsHandler(this)
-
-            val bonjourServices = mdnsHandler.services
-            var failedToFindLR125 = true
-
-            if (bonjourServices.isNotEmpty()) {
-                dialogNetworkScanInProgress?.cancel()
-                callScanNetworkOnDialogClose = false
-
-                for (i in 0 until bonjourServices.size) {
-                    println(bonjourServices[i].inet4Address.toString())
-                    if (ipAddressIsValid(bonjourServices[i].inet4Address.toString())) {
-                        ipAddress = bonjourServices[i].inet4Address.toString()
-                        loadURL("$ipAddress/$route")
-                        failedToFindLR125 = false
-                        break
-                    }
-                }
-            }
-        }
-        if (failedToFindLR125) {
-            callScanNetworkOnDialogClose = false
-            dialogNetworkScanInProgress?.cancel()
-
-            runOnUiThread {
-                showDialogLRNotFound()
-            }
-        }
-        try {
-            dialogNetworkScanInProgress!!.cancel()
-            if (dialogNetworkScanInProgress?.isShowing == true) dialogNetworkScanInProgress?.cancel()
-            callScanNetworkOnDialogClose = false
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-*/
     private fun findLR125WithoutConnection(route: String = ""): Unit{
 
         val currentTime = System.currentTimeMillis() / 1000
@@ -422,13 +342,11 @@ class MainActivity : AppCompatActivity() {
         backgroundExecutor.schedule({
             if ((dialogNetworkScanInProgress?.isShowing == true) && (ipAddress == null)) {
                 dialogNetworkScanInProgress!!.cancel()
-                callScanNetworkOnDialogClose = false
                 dialogLRNotFound?.show()
             } else {
                 dialogNetworkScanInProgress!!.cancel()
-                callScanNetworkOnDialogClose = false
             }
-        }, 10, TimeUnit.SECONDS)
+        }, 5, TimeUnit.SECONDS)
     }
 
     private fun convertByteArray(byteArray: ByteArray): String {
@@ -497,13 +415,8 @@ class MainActivity : AppCompatActivity() {
 */
 
     fun isInternetAvailable(): Boolean {
-        return try {
-            val ipAddr: InetAddress = InetAddress.getByName("google.com")
-            //You can replace it with your name
-            !ipAddr.equals("")
-        } catch (e: Exception) {
-            false
-        }
+        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        return wifiManager.isWifiEnabled
     }
 
     /***
@@ -512,14 +425,16 @@ class MainActivity : AppCompatActivity() {
      */
 
     private fun navigateToCloud() {
-            webView.post(Runnable {
-                if (isInternetAvailable()) { //isInternetAvailable(applicationContext)
-                    val urlCloud: String = resources.getString(R.string.url_cloud)
-                    webView.loadUrl(urlCloud)
-                } else {
-                    showDialogNoInternet();
-                }
-            })
+        webView.post(Runnable {
+            if(isInternetAvailable()) {
+                val urlCloud: String = resources.getString(R.string.url_cloud)
+                webView.loadUrl(urlCloud)
+            }
+            else
+            {
+                showDialogNoInternet();
+            }
+        })
     }
 
     private fun refreshPage() {
@@ -583,6 +498,14 @@ class MainActivity : AppCompatActivity() {
         dialogLRNotFound?.setOnCancelListener {
             if(callScanNetworkOnDialogClose) {
                 scanNetwork()
+            }
+            if(goToCloud){
+                if (dialogLRNotFound?.isShowing == true) {
+                    dialogLRNotFound?.dismiss()
+                }
+                if (dialogNetworkScanInProgress?.isShowing == true) {
+                    dialogNetworkScanInProgress?.dismiss()
+                }
             }
         }
     }
