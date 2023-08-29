@@ -31,7 +31,7 @@ android {
             applicationId "com.silverleaf.lrgizmo"
             namespace = "com.silverleaf.lrgizmo"
             versionName "1.22"
-            versionCode 27
+            versionCode 26
         }
 
     }

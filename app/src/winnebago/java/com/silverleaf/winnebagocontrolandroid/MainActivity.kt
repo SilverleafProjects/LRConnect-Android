@@ -194,7 +194,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 /*
-    fun scanhNetwork(route: String = "") {
+    fun scanNetwork(route: String = "") {
         if ((udpListenerIsNotRunning) || (lr125DataStorage.isEmpty())) startUDPListenerThread()
         while (lr125DataStorage.isEmpty()) {
             if (lr125DataStorage.isNotEmpty()) break
@@ -240,7 +240,7 @@ class MainActivity : AppCompatActivity() {
             else {
                 setIPAddressToLR125(route)
             }
-        },4000)
+        },3000)
     }
 
     private fun setIPAddressToLR125(route: String = "") {

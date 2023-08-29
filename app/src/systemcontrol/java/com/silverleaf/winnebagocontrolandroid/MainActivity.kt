@@ -166,7 +166,6 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        println("Screen Status $status")
     }
 
     private fun setupLifecycleListener() {
@@ -297,7 +296,7 @@ class MainActivity : AppCompatActivity() {
             else {
                 setIPAddressToLR125(route)
             }
-        },4000)
+        },3000)
     }
 
     private fun setIPAddressToLR125(route: String = "") {
@@ -535,7 +534,6 @@ fun isInternetAvailable(context: Context): Boolean {
                 scanNetwork()
             }
         }
-
     }
 
     private fun showDialogLRNotFound() {
@@ -548,12 +546,18 @@ fun isInternetAvailable(context: Context): Boolean {
         dialogLRNotFound?.show()
         dialogLRNotFound?.window?.setLayout(widthDialog, heightDialog)
 
-
         dialogLRNotFound?.setOnCancelListener {
             if(callScanNetworkOnDialogClose) {
+                goToCloud = false
                 scanNetwork()
             }
             if(goToCloud){
+                println("Cloud Service: ${preferences.retrieveBoolean("screenAlwaysOnStatus")}")
+                if(!cloudServiceStatus){
+                    cloudServiceStatus = true
+                    preferences.saveBoolean("screenAlwaysOnStatus", true)
+                    println("Cloud Service is set to: ${preferences.retrieveBoolean("screenAlwaysOnStatus")}")
+                }
                 if (dialogLRNotFound?.isShowing == true) {
                     dialogLRNotFound?.dismiss()
                 }
