@@ -109,7 +109,9 @@ class MainActivity : AppCompatActivity() {
         ) / 10
 
         bindUI()
-        requestLocationPermission()
+
+        if(preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
+
         setNetworkChangeCallBack()
         setupLifecycleListener()
     }
@@ -242,6 +244,7 @@ class MainActivity : AppCompatActivity() {
             }
         },3000)
     }
+
 
     private fun setIPAddressToLR125(route: String = "") {
 
@@ -453,6 +456,17 @@ class MainActivity : AppCompatActivity() {
         val dialogNoCloudService = DialogNoCloudService(this)
         dialogNoCloudService.show()
         dialogNoCloudService.window?.setLayout(dialogSide, dialogSide)
+    }
+
+    private fun showDialogAppUsesLocationData() {
+        val dialogUsesLocation = DialogAppUsesLocation(this, webView)
+        dialogUsesLocation.show()
+        dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)
+
+        dialogUsesLocation?.setOnCancelListener{
+            requestLocationPermission()
+        }
+
     }
 
     private fun showDialogEnterIPAddress() {

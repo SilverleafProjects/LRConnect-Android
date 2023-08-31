@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
         ) / 10
 
         bindUI()
-        requestLocationPermission()
+        if(preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
         setNetworkChangeCallBack()
         setupLifecycleListener()
     }
@@ -519,6 +519,18 @@ fun isInternetAvailable(context: Context): Boolean {
                 showDialogNoCloudService()
             }
         }
+    }
+
+    private fun showDialogAppUsesLocationData() {
+        println("function has been called")
+        val dialogUsesLocation = DialogAppUsesLocation(this, webView)
+        dialogUsesLocation.show()
+        dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)
+
+        dialogUsesLocation?.setOnCancelListener{
+            requestLocationPermission()
+        }
+
     }
 
     private fun showDialogWifiNotEnabled() {
