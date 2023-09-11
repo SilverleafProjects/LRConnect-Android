@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.KeyEvent.DispatcherState
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -32,6 +33,7 @@ import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import preferences.Preferences
 import scannetwork.MdnsHandler
 import webviewsettings.setWebView
@@ -107,11 +109,16 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.widthPixels,
             resources.displayMetrics.heightPixels
         ) / 10
-
         bindUI()
-
-        if(preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
-
+        println("Current Thread Ends")
+        /*
+        runBlocking(Dispatchers.Default) {
+            launch(Dispatchers.IO) {
+                if (preferences.retrieveBoolean("didUserAcceptData") != true) runOnUiThread{showDialogAppUsesLocationData()}
+            }
+        }
+        */
+        println("Control Passes To New Thread")
         setNetworkChangeCallBack()
         setupLifecycleListener()
     }
@@ -194,21 +201,6 @@ class MainActivity : AppCompatActivity() {
         }
         udpListenerIsNotRunning = false
     }
-
-/*
-    fun scanNetwork(route: String = "") {
-        if ((udpListenerIsNotRunning) || (lr125DataStorage.isEmpty())) startUDPListenerThread()
-        while (lr125DataStorage.isEmpty()) {
-            if (lr125DataStorage.isNotEmpty()) break
-        }
-        if(LRConnectCalledFromSettingsMenu) {
-            findLR125WithoutConnection(route)
-            LRConnectCalledFromSettingsMenu = false
-        }
-        else setIPAddressToLR125(route)
-
-    }
-*/
 
     fun scanNetwork(route: String=""){
         runOnUiThread {
@@ -321,7 +313,6 @@ class MainActivity : AppCompatActivity() {
         val currentTime = System.currentTimeMillis() / 1000
 
         if (lr125DataStorage.isNotEmpty()) {
-            Log.d("Test Point", "TP2")
             dialogNetworkScanInProgress?.cancel()
             callScanNetworkOnDialogClose = false
 

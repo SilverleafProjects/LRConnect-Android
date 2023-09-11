@@ -33,12 +33,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import preferences.Preferences
 import webviewsettings.setWebView
+import java.lang.Runnable
 import java.net.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -104,7 +102,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -140,7 +137,13 @@ class MainActivity : AppCompatActivity() {
         ) / 10
 
         bindUI()
-        if(preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
+        /*
+        runBlocking {
+            CoroutineScope(Dispatchers.IO).launch {
+                if (preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
+            }
+        }
+        */
         setNetworkChangeCallBack()
         setupLifecycleListener()
     }
@@ -454,12 +457,8 @@ fun isInternetAvailable(context: Context): Boolean {
     private fun navigateToCloud() {
         if(cloudServiceStatus) {
             webView.post(Runnable {
-                if (isInternetAvailable()) {
-                    val urlCloud: String = resources.getString(R.string.url_cloud)
-                    webView.loadUrl(urlCloud)
-                } else {
-                    showDialogNoInternet();
-                }
+                val urlCloud: String = resources.getString(R.string.url_cloud)
+                webView.loadUrl(urlCloud)
             })
         }else{
             showDialogNoCloudService()
@@ -522,7 +521,6 @@ fun isInternetAvailable(context: Context): Boolean {
     }
 
     private fun showDialogAppUsesLocationData() {
-        println("function has been called")
         val dialogUsesLocation = DialogAppUsesLocation(this, webView)
         dialogUsesLocation.show()
         dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)

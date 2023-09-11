@@ -40,15 +40,17 @@ class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activit
 
         buttonDialogConnectToCloudConnect = findViewById(R.id.buttonDialogConnectToCloudConnect)
         buttonDialogConnectToCloudConnect.setOnClickListener {
-            if(MainActivity.internetAvailable) {
+         //   if(MainActivity.internetAvailable) {
                 textViewNoInternet.visibility = View.INVISIBLE
                 webView.post(Runnable {
                     webView.loadUrl(activity.resources.getString(R.string.url_cloud))
                 })
                 this.cancel()
+            /*
             } else {
                 textViewNoInternet.visibility = View.VISIBLE
             }
+        */
         }
 
         /*buttonDialogConnectToCloudCancel = findViewById(R.id.buttonDialogConnectToCloudCancel)

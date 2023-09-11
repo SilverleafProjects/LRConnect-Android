@@ -103,18 +103,19 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
         buttonDialogLRNotFoundCloud = findViewById(R.id.lrNotFoundGoToCloud)
         buttonDialogLRNotFoundCloud.setOnClickListener {
             MainActivity.callScanNetworkOnDialogClose = false
-            if(MainActivity.internetAvailable) {
+          //  if(MainActivity.internetAvailable) {
                 textViewNoInternet.visibility = View.INVISIBLE
                 webView.post(Runnable {
                     webView.loadUrl(activity.resources.getString(R.string.url_cloud))
                 })
                 MainActivity.goToCloud = true
                 this.cancel()
+            /*
             } else {
                 MainActivity.goToCloud = false
                 textViewNoInternet.visibility = View.VISIBLE
             }
-
+*/
         }
 
     }
