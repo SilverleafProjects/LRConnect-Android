@@ -28,7 +28,7 @@
     <string name="button_dialog_cloud_options_disable">Disable</string>
     <string name="preference_cloud_enabled">preferenceCloudEnabled</string>
     <!--    <string name="url_cloud">https://testmyrozie.com</string>-->
-    <string name="url_cloud">https://roziecoreservices.com</string>
+    <string name="url_cloud">https://testmyrozie.com</string>
     <string name="button_dialog_wifi_not_connected_exit_app">Exit</string>
     <string name="button_dialog_wifi_not_connected_go_to_cloud_site">Cloud</string>
     <string name="text_view_dialog_wifi_not_connected_error">No Wifi Connection</string>
@@ -44,4 +44,45 @@
     <string name="button_dialog_cellular_detected_connect">Connect</string>
     <string name="button_dialog_lr_not_found_go_to_cloud">Connect to Cloud</string>
     <string name="text_view_dialog_no_internet">No Internet connection, please connect and try again.</string>
+    <string name="dialog_selected_item">Selected Model:</string>
+    <string-array name="Versions">
+        <item>Other</item>
+        <item>2020</item>
+        <item>2021</item>
+        <item>2022</item>
+        <item>2023</item>
+        <item>2024</item>
+        <item>2025</item>
+        <item>2026</item>
+    </string-array>
+    <string-array name="NotificationTypes">
+        <item>Email Notifications</item>
+        <item>SMS Notification</item>
+        <item>Notifications Off</item>
+    </string-array>
+    <string-array name="HTTPAutoLogin">
+        <item> Auto Cloud Login On </item>
+        <item> Auto Cloud Login Off</item>
+    </string-array>
+    <string-array name = "RozieVersions">
+        <item>MyRozie</item>
+        <item>Rozie Core Services</item>
+        <item>Rozie 2</item>
+        <item>None</item>
+    </string-array>
+    <string-array name="CoachNames">
+        <item>Winnebago</item>
+        <item>Foretravel</item>
+        <item>Country Coach</item>
+        <item>Advanced RV</item>
+        <item>Newmar</item>
+        <item>Newell</item>
+        <item>Other</item>
+        <item></item>
+    </string-array>
+    <string-array name="RozieServiceVariants">
+        <item>My Rozie</item>
+        <item>Rozie Core HTTP</item>
+        <item>Rozie Core Services</item>
+    </string-array>
 </resources>

@@ -14,7 +14,6 @@ object WebSocketManager {
     private var connectionAttempts = 0
 
     fun initialize(url: String, messageListener: MessageListener) {
-        println("Init called")
         okHttpClient = OkHttpClient.Builder()
             .writeTimeout(5, TimeUnit.SECONDS)
             .readTimeout(5, TimeUnit.SECONDS)
@@ -59,10 +58,10 @@ object WebSocketManager {
 
     private fun createWebSocketListener(): WebSocketListener {
         return object : WebSocketListener() {
-            override fun onOpen(socket: WebSocket, response: Response?) {
+            override fun onOpen(socket: WebSocket, response: Response) {
                 super.onOpen(socket, response)
                 webSocket = socket
-                isConnected = response?.code() == 101
+                isConnected = response.code == 101
                 if(!isConnected) {
                     reconnect()
                 }
@@ -72,27 +71,27 @@ object WebSocketManager {
                 }
             }
 
-            override fun onMessage(webSocket: WebSocket?, message: String?) {
+            override fun onMessage(webSocket: WebSocket, message: String) {
                 super.onMessage(webSocket, message)
                 messageListener.onMessage(message)
             }
 
-            override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 isConnected = false
                 messageListener.onClose()
                 super.onClosing(webSocket, code, reason)
             }
 
-            override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 isConnected = false
                 messageListener.onClose()
                 super.onClosed(webSocket, code, reason)
             }
 
-            override fun onFailure(webSocket: WebSocket?, t: Throwable?, response: Response?) {
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 super.onFailure(webSocket, t, response)
                 if(response != null) {
-                    println("Connection failed: ${response.message()}")
+                    println("Connection failed: ${response.message}")
                 }
                 println("Connect throwable: ${t?.message}")
                 isConnected = false

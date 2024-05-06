@@ -24,6 +24,7 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,10 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.*
+import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.json.JSONArray
+import org.json.JSONObject
 import preferences.Preferences
 import webviewsettings.setWebView
 import java.lang.Runnable
@@ -42,6 +47,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
+
+/* CURRENT VERSION:  8: 1.06 */
 
 class ScreenStatusViewModel : ViewModel() {
 
@@ -61,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
     private var dialogConnectToCloud: DialogConnectToCloud? = null
     private var dialogWifiNotEnabled: DialogWifiNotEnabled? = null
+    private var dialogUserInformation: DialogUserInformation? = null
     private var dialogLRNotFound: DialogLRNotFound? = null
     private var lastNetwork: Network? = null
     private val lifecycleListener: LifecycleListener by lazy {
@@ -83,12 +91,21 @@ class MainActivity : AppCompatActivity() {
         lateinit var preferences: Preferences
         val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
         var failedToDiscoverLR: Boolean = true
+        var usersVariantOfRozie: String = String()
+
+        var email_id: String = ""
+        var sms_id: String = ""
+        var push_id: String = ""
 
         /* Sentinel values used between classes */
         var callScanNetworkOnDialogClose: Boolean = false
-        //var lrDiscoveryDialog: Boolean = true
         var noDetectedLROnNetwork: Boolean = false
         var goToCloud: Boolean = false
+        var goToCloudLogin: Boolean = false
+        var isConnectedToLR: Boolean = false
+        var isConnectedToCloud: Boolean = false
+        var isHTTPAutoLoginEnabled: String = ""
+        var getUserInformationOnClose: Boolean = false
 
         /* Declarations for NSD Manager*/
         var usingMDNSLookup: Boolean = false
@@ -96,10 +113,16 @@ class MainActivity : AppCompatActivity() {
         var NSDListener: DiscoveryListener = DiscoveryListener()
         val lrDetectCoroutine = CoroutineScope(Dispatchers.IO)
 
-        fun saveTokenToPreferences(token: String) {
-            preferences.saveString("token", token)
-        }
-
+        /* Declarations for HTTP requests */
+        val client = OkHttpClient()
+        var httpAccessToken: String = String()
+        var userEnteredCredentials: Boolean = false
+        var tokenValidStartTime:Long = 0
+        var winegardAccessToken: String = String()
+        var winegardIdToken: String = String()
+        var winegardRefreshToken: String = String()
+        var registerToRozieURL: String = String()
+        private var haveNotificationsBeenRecieved: Boolean = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,6 +137,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
+
             if (preferences.retrieveBoolean("screenAlwaysOnStatus") != null) {
                 val screenstat = preferences.retrieveBoolean("screenAlwaysOnStatus")
                 screenAlwaysOn = screenstat
@@ -125,7 +149,6 @@ class MainActivity : AppCompatActivity() {
                 println("Cloud status: $cloudstat")
             } else cloudServiceStatus = false
 
-            // relativeLayoutMain.keepScreenOn = screenAlwaysOn
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -136,16 +159,12 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.heightPixels
         ) / 10
 
+
         bindUI()
-        /*
-        runBlocking {
-            CoroutineScope(Dispatchers.IO).launch {
-                if (preferences.retrieveBoolean("didUserAcceptData") != true) showDialogAppUsesLocationData()
-            }
-        }
-        */
         setNetworkChangeCallBack()
         setupLifecycleListener()
+
+        if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) showDialogModelAndYear()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -156,19 +175,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                 window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-    }
-
-    fun toggleScreenStatus(status: Boolean) {
-
-        try {
-            viewModel.currentStatus.value = status
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     private fun setupLifecycleListener() {
@@ -192,7 +203,7 @@ class MainActivity : AppCompatActivity() {
             R.id.network_page -> appendToIPAddress(resources.getString(R.string.route_network))
             R.id.cloud_page -> navigateToCloud()
             R.id.systemcontrol_settingpage -> navigateToSettingsPage()
-
+            R.id.register_to_rozie -> registerToRozieCoreServices()
             else -> println("default")
         }
         return super.onOptionsItemSelected(item)
@@ -214,92 +225,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestLocationPermission(): Int {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                //TODO What todo here?
-            } else {
-                // request permission
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    PERMISSION_CODE_ACCEPTED
-                )
-            }
-        } else {
-            // already granted
-            return PERMISSION_CODE_ACCEPTED
-        }
-        // not available
-        return PERMISSION_CODE_NOT_AVAILABLE
-    }
-
-    private fun startUDPListenerThread() {
-        udpDetectCoroutine.launch {
-            while (lr125DataStorage.isEmpty()){
-                udpMessageListener()
-                if(lr125DataStorage.isNotEmpty()) break
-            }
-        }
-        udpListenerIsNotRunning = false
-    }
-    private fun startNSDListenerThread() {
-            lrDetectCoroutine.launch {
-
-                NSDManager.discoverServices(
-                    "_http._tcp",
-                    NsdManager.PROTOCOL_DNS_SD,
-                    NSDListener
-                )
-            }
-        return
-    }
-
     fun scanNetwork(route: String=""){
+        isConnectedToLR = false
+        isConnectedToCloud = false
+        usingMDNSLookup = false
 
-        runOnUiThread {
-            dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
-            dialogNetworkScanInProgress?.show()
-            dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+        if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On") && (preferences.retrieveBoolean("cloudServiceStatus"))){
+            if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
+                val actoken = preferences.retrieveString("AccessToken")
+                val idtoken = preferences.retrieveString("IDToken")
+                val rftoken = preferences.retrieveString("RefreshToken")
+                webView.post(kotlinx.coroutines.Runnable {
+                    webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
+                })
+
+                val autoConnectionToast = Toast.makeText(this.applicationContext, "Automatically connected to Rozie Core Services.", Toast.LENGTH_SHORT)
+                autoConnectionToast.show()
+
+                isConnectedToCloud = true
+            }else{
+                navigateToCloud()
+            }
         }
+        else
+        {
+            runOnUiThread {
+                dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+                dialogNetworkScanInProgress?.show()
+                dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
+            }
 
-        timeoutIfLRIsNotDetected()
-        udpDetectCoroutine.launch {
+            timeoutIfLRIsNotDetected()
+            udpDetectCoroutine.launch {
                 udpMessageListener()
-                while (lr125DataStorage.isEmpty()){
+                while (lr125DataStorage.isEmpty()) {
                     if (lr125DataStorage.isNotEmpty()) break
                 }
-        }
+            }
 
-        if(noDetectedLROnNetwork){
-            usingMDNSLookup = true
-            lrDetectCoroutine.launch {
-                NSDManager.discoverServices(
-                    "_http._tcp",
-                    NsdManager.PROTOCOL_DNS_SD,
-                    NSDListener
-                )
+            if (noDetectedLROnNetwork) {
+                isConnectedToLR = false
+                usingMDNSLookup = true
+                lrDetectCoroutine.launch {
+                    NSDManager.discoverServices(
+                        "_http._tcp",
+                        NsdManager.PROTOCOL_DNS_SD,
+                        NSDListener
+                    )
+                }
             }
-        }
 
-        Handler().postDelayed({
-            if(lr125DataStorage.isEmpty() && (NSDListener.serviceList.size == 0)){
-                showDialogLRNotFound()
-            }
-            else {
-                setIPAddressToLR125(route)
-            }
-        },3000)
+            Handler().postDelayed({
+                if (lr125DataStorage.isEmpty() && (NSDListener.serviceList.size == 0)) {
+                    showDialogLRNotFound()
+                } else {
+                    isConnectedToLR = true
+                    setIPAddressToLR125(route)
+                }
+            }, 3000)
+        }
     }
 
     private fun setIPAddressToLR125(route: String = "") {
@@ -407,6 +391,7 @@ class MainActivity : AppCompatActivity() {
             }
         }, 5, TimeUnit.SECONDS)
     }
+
     /*******************************************************/
     private fun isValidSilverLeafDevice(messageString: String): Boolean {
         return (messageString.contains("LR125")) || (messageString.contains("RVHALO"))
@@ -420,6 +405,11 @@ class MainActivity : AppCompatActivity() {
         var returnString: String = ""
         for (byte in byteArray) returnString += byte.toInt().toChar()
         return returnString
+    }
+
+    private fun hasAccessTokenTimedOut(currentTime: Long, tokenValidationTime: Long): Boolean {
+        val expiration_time = preferences.retrieveInt("AccessTimeout")
+        return currentTime > (tokenValidationTime + (expiration_time * 1000))
     }
 
     private fun loadURL(url: String) {
@@ -444,9 +434,25 @@ fun isInternetAvailable(context: Context): Boolean {
     }
 */
 
+    private fun currentRozieAddress(): String{
+        when(preferences.retrieveString("RozieVersion").toString()){
+            "MyRozie" -> return "myrozie.com/"
+            "Rozie 2" -> return "identity.winegard-staging.io/login/"
+            "Rozie Core Services" -> return "roziecoreservices.com"
+            "None" -> return "None"
+        }
+        return "Error"
+    }
+
     fun isInternetAvailable(): Boolean {
         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         return wifiManager.isWifiEnabled
+    }
+
+    private fun accessKeyHasTimedOut(): Boolean{
+        return System.currentTimeMillis() > (preferences.retrieveLong(
+            "TokenStartTime"
+        ) + (preferences.retrieveInt("AccessTimeout") * 1000))
     }
 
     /***
@@ -454,12 +460,53 @@ fun isInternetAvailable(context: Context): Boolean {
      * R.string.url_cloud might be set to test site. // currently correct.
      */
 
-    private fun navigateToCloud() {
+    private fun navigateToCloud()
+    {
+        if(cloudServiceStatus || (preferences.retrieveString("RozieVersion") != "None")){
+
+            if(preferences.retrieveString("RozieVersion") != "Rozie 2")
+            {
+                loadURL(currentRozieAddress())
+                isConnectedToCloud = true
+            }else if(preferences.retrieveString("RozieVersion") == "Rozie 2"){
+
+                if((preferences.retrieveString("AccessToken") == null) || (accessKeyHasTimedOut())) runBlocking {showDialogUserInformation()} //if access has timed out or we have no token, prompt user information
+                else{
+                    val actoken = preferences.retrieveString("AccessToken")
+                    val idtoken = preferences.retrieveString("IDToken")
+                    val rftoken = preferences.retrieveString("RefreshToken")
+                    webView.post(kotlinx.coroutines.Runnable {
+                        webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
+                    })
+                    isConnectedToCloud = true
+                }
+            }
+
+        }else{
+            showDialogNoCloudService()
+            isConnectedToCloud = false
+        }
+    }
+
+    private fun registerToRozieCoreServices()
+    {
         if(cloudServiceStatus) {
-            webView.post(Runnable {
-                val urlCloud: String = resources.getString(R.string.url_cloud)
-                webView.loadUrl(urlCloud)
-            })
+            if (preferences.retrieveString("AccessToken") != null) {
+                registerToRozieURL =
+                    "register/rozie2register.php?accessToken=${
+                        preferences.retrieveString(
+                            "AccessToken"
+                        )
+                    }&idToken=${
+                        preferences.retrieveString("IDToken")
+                    }&refreshToken=${preferences.retrieveString("RefreshToken")}"
+
+                webView.post(kotlinx.coroutines.Runnable{
+                    appendToIPAddress(registerToRozieURL)
+                })
+            } else {
+                showDialogUserInformation()
+            }
         }else{
             showDialogNoCloudService()
         }
@@ -471,10 +518,32 @@ fun isInternetAvailable(context: Context): Boolean {
         })
     }
 
-    private fun showDialogNoInternet() {
-        val dialogNoInternet = DialogNoInternet(this)
-        dialogNoInternet.show()
-        dialogNoInternet.window?.setLayout(dialogSide, dialogSide)
+    private fun showDialogIncorrectCredentials() {
+        val dialogIncorrectCredentials = DialogIncorrectCredentials(this)
+        dialogIncorrectCredentials.show()
+        dialogIncorrectCredentials.window?.setLayout(dialogSide, dialogSide)
+    }
+
+    private fun showDialogModelAndYear() {
+        //Rozie Core == 1 //Winnebago Only
+        //Rozie 2 == 2    //Modern API
+        //MyRozie == 3    //Old Rozie Login
+        //None == 4       //None
+        val dialogInitialModelAndYear = DialogModelAndYear(this)
+        dialogInitialModelAndYear.show()
+        dialogInitialModelAndYear.window?.setLayout(dialogSide, dialogSide)
+        dialogInitialModelAndYear.setOnCancelListener {
+            if(goToCloudLogin){
+                cloudServiceStatus = true
+                navigateToCloud()
+            }
+        }
+    }
+
+    private fun showDialogUserInformation() {
+        val dialogUserInformation = DialogUserInformation(this, webView)
+        dialogUserInformation.show()
+        dialogUserInformation.window?.setLayout(dialogSide, dialogSide)
     }
 
     private fun showDialogNoCloudService() {
@@ -492,10 +561,11 @@ fun isInternetAvailable(context: Context): Boolean {
             dialogEnterIPAddress.window?.setLayout(dialogSide, dialogSide)
         }
     }
+
     private fun navigateToSettingsPage() {
 
         val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
-        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 8 / 10
+        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
 
         val dialogSettingsMenu = DialogSystemControlSettings(this, webView)
 
@@ -503,32 +573,21 @@ fun isInternetAvailable(context: Context): Boolean {
         dialogSettingsMenu.show()
             dialogSettingsMenu.window?.setLayout(widthDialog, heightDialog)
         }
+        dialogSettingsMenu.setOnCancelListener {
 
-    }
-
-    private fun showDialogCloudOptions() {
-        if(!wifiIsEnabled())
-            showDialogWifiNotEnabled()
-        else {
-            if(cloudServiceStatus) {
-                val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
-                dialogCloudOptions.show()
-                dialogCloudOptions.window?.setLayout(dialogSide, dialogSide)
-            }else{
-                showDialogNoCloudService()
+            if(getUserInformationOnClose)
+            {
+                navigateToCloud()
+                getUserInformationOnClose = false
+            }
+            usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
+                "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
+                "Rozie 2" -> "identity.winegard-staging.io/login/"//println("Variant: Rozie 2") //Scott's APE
+                "MyRozie" -> "myrozie.com/"
+                "None" -> "None Selected"
+                else -> "myrozie.com/"
             }
         }
-    }
-
-    private fun showDialogAppUsesLocationData() {
-        val dialogUsesLocation = DialogAppUsesLocation(this, webView)
-        dialogUsesLocation.show()
-        dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)
-
-        dialogUsesLocation?.setOnCancelListener{
-            requestLocationPermission()
-        }
-
     }
 
     private fun showDialogWifiNotEnabled() {
@@ -747,6 +806,7 @@ fun isInternetAvailable(context: Context): Boolean {
             }
         }
     }
+
     private fun ipToString(i: Int): String {
         return (i and 0xFF).toString() + "." +
                 (i shr 8 and 0xFF) + "." +

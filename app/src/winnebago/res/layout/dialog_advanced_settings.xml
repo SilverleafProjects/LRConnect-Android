@@ -55,24 +55,10 @@
         android:textSize="9sp" />
 
     <Spinner
-        android:id="@+id/CoachModelSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonConnectionSettings"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="70dp"
-        android:layout_marginRight="70dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        android:text="Select Model:"
-        android:textSize="20dp"
-        />
-
-    <Spinner
         android:id="@+id/VersionSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/CoachModelSpinner"
+        android:layout_below="@+id/buttonConnectionSettings"
         android:layout_gravity="center_vertical|center_horizontal"
         android:layout_marginLeft="70dp"
         android:layout_marginRight="70dp"
@@ -94,6 +80,7 @@
         android:text="Select Model:"
         android:textSize="20dp"
         />
+
 
     <Spinner
         android:id="@+id/HTTPAutoLoginSpinner"
@@ -124,19 +111,19 @@
         android:id="@+id/emailAlertCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/HTTPAutoLoginSpinner"
         android:layout_alignParentRight="true"
         android:layout_marginRight="25dp"
         android:buttonTint="@color/text_color"
         android:layout_marginBottom="10dp"
         android:text="Email Alerts"
-        android:layout_below="@+id/HTTPAutoLoginSpinner"
         />
 
     <TextView
         android:id="@+id/textViewEnableScreen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/emailAlertCheckbox"
+        android:layout_below="@+id/smsAlertCheckbox"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="30dp"
         android:text="Screen Always On"
@@ -152,15 +139,15 @@
         android:layout_below="@+id/textViewEnableScreen"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="53dp"
-        android:textColor="@color/powder_blue"
+        android:textColor="@color/text_color"
         android:textSize="12sp" />
 
 
     <Button
         android:id="@+id/enableScreenAlwaysOn"
         android:padding="5dp"
-        android:layout_height="35dp"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/screenStatus"
         android:gravity="center"
         android:layout_marginLeft="40dp"
@@ -171,7 +158,7 @@
         android:id="@+id/disableScreenAlwaysOn"
         android:padding="5dp"
         android:layout_width="wrap_content"
-        android:layout_height="35dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/enableScreenAlwaysOn"
         android:layout_gravity="center"
         android:layout_marginLeft="40dp"
@@ -199,7 +186,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginTop="10dp"
         android:layout_marginRight="53dp"
-        android:textColor="@color/powder_blue"
+        android:textColor="@color/text_color"
         android:textSize="12sp" />
 
 
@@ -207,7 +194,7 @@
         android:id="@+id/enableCloudFeatures"
         android:padding="5dp"
         android:layout_width="wrap_content"
-        android:layout_height="35dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/cloudStatus"
         android:layout_alignParentRight="true"
         android:layout_marginRight="40dp"
@@ -219,7 +206,7 @@
         android:id="@+id/disableCloudFeatures"
         android:padding="5dp"
         android:layout_width="wrap_content"
-        android:layout_height="35dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/enableCloudFeatures"
         android:layout_marginRight="40dp"
         android:layout_alignParentRight="true"
@@ -230,7 +217,7 @@
     <Button
         android:id="@+id/returnToAppButton"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="80dp"
         android:layout_marginRight="80dp"
         android:layout_marginBottom="15dp"

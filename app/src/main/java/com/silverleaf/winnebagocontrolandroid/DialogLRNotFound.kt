@@ -18,12 +18,8 @@ import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.callScanNet
 
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.ipAddress
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lr125DataStorage
-//import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.lrDiscoveryDialog
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.noDetectedLROnNetwork
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import webviewsettings.setWebView
 import java.net.DatagramPacket
 import java.net.SocketTimeoutException
 
@@ -106,9 +102,9 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
           //  if(MainActivity.internetAvailable) {
                 textViewNoInternet.visibility = View.INVISIBLE
                 webView.post(Runnable {
-                    webView.loadUrl(activity.resources.getString(R.string.url_cloud))
+                    webView.loadUrl(MainActivity.usersVariantOfRozie)
+                    MainActivity.goToCloud = true
                 })
-                MainActivity.goToCloud = true
                 this.cancel()
             /*
             } else {

@@ -35,11 +35,35 @@ class DialogNoInternet(activity: Activity): Dialog(activity) {
 
     private fun bindUI() {
 
-        buttonDialogDismiss = findViewById(R.id.buttonDialogNoInternet)
+        buttonDialogDismiss = findViewById(R.id.buttonDialogCancel)
         buttonDialogDismiss.setOnClickListener {
             this.cancel()
         }
 
+    }
+}
+class DialogIncorrectCredentials(activity: Activity): Dialog(activity){
+    private lateinit var buttonDialogDismiss: Button
+
+    private var activity: Activity
+    init {
+        setCancelable(false)
+        activity.also { this.activity = it }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        setContentView(R.layout.dialog_incorrect_credentials)
+
+        bindUI()
+    }
+
+    private fun bindUI() {
+        buttonDialogDismiss = findViewById(R.id.buttonDialogNoCredentials)
+        buttonDialogDismiss.setOnClickListener {
+            this.cancel()
+        }
     }
 }
 
@@ -57,9 +81,6 @@ class DialogNoCloudService(activity: Activity): Dialog(activity){
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_no_cloud_service)
-
-
-
 
         bindUI()
     }

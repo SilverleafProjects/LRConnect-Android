@@ -2,37 +2,56 @@ package com.silverleaf.winnebagocontrolandroid
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.res.Resources
 import android.os.Bundle
 import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.Button
-import android.widget.RelativeLayout
 import android.widget.TextView
 import com.silverleaf.lrgizmo.R
-import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.screenAlwaysOn
+import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.*
+import androidx.core.view.isVisible
+import com.silverleaf.lrgizmo.R.*
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.email_id
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
-private var ipAddress: String = MainActivity.ipAddress
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.screenAlwaysOn
+import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.usersVariantOfRozie
+import kotlinx.coroutines.*
+import okhttp3.internal.http.HTTP_GONE
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.MissingFormatArgumentException
 
 class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(activity) {
 
-    private lateinit var buttonAdvancedSettings: Button
+    private lateinit var buttonAdvancedSettings:   Button
     private lateinit var buttonConnectionSettings: Button
-    private lateinit var buttonOemSettings: Button
+    private lateinit var buttonOemSettings:        Button
 
-    private lateinit var enableCloudFeatures: Button
-    private lateinit var disableCloudFeatures: Button
+    private lateinit var enableCloudFeatures:   Button
+    private lateinit var disableCloudFeatures:  Button
     private lateinit var disableScreenAlwaysOn: Button
 
-    private lateinit var cloudStatus: TextView
+    private lateinit var cloudStatus:  TextView
     private lateinit var screenStatus: TextView
 
+    private lateinit var smsCheckBox:   CheckBox
+    private lateinit var emailCheckBox: CheckBox
+    private lateinit var rozieVersionSpinner: Spinner
+
     private lateinit var enableScreenAlwaysOn: Button
-    private lateinit var returnToAppButton: Button
+    private lateinit var returnToAppButton:    Button
+
+    private var haveNotificationsBeenRecieved: Boolean = false
 
     private var webView: WebView
     private var activity: Activity
-
-    private fun callScreenStatusToggle(activity: MainActivity) = activity.toggleScreenStatus(screenAlwaysOn)
 
     init {
         setCancelable(false)
@@ -50,7 +69,19 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.dialog_advanced_settings)
+        setContentView(layout.dialog_advanced_settings)
+
+        val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
+        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
+
+        smsCheckBox = findViewById<CheckBox>(R.id.smsAlertCheckbox)
+        emailCheckBox = findViewById<CheckBox>(R.id.emailAlertCheckbox)
+        rozieVersionSpinner = findViewById<Spinner>(id.RozieVersionSpinner)
+
+        if(!MainActivity.cloudServiceStatus){
+            smsCheckBox.visibility = GONE
+            emailCheckBox.visibility = GONE
+        }
 
         updateCloudServiceText(MainActivity.cloudServiceStatus)
         updateScreenStatusText(MainActivity.screenAlwaysOn)
@@ -60,17 +91,17 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
     private fun getIPAddress(): String {
         val ipAddress = MainActivity.ipAddress
 
-        val protocol = context.resources.getString(R.string.protocol_http)
+        val protocol = context.resources.getString(string.protocol_http)
         return "$protocol$ipAddress"
     }
 
     private fun updateCloudServiceText(cloudservice: Boolean) {
         try {
             if (cloudservice) {
-                cloudStatus = findViewById(R.id.cloudStatus)
+                cloudStatus = findViewById(id.cloudStatus)
                 cloudStatus.text = "Enabled"
             } else {
-                cloudStatus = findViewById(R.id.cloudStatus)
+                cloudStatus = findViewById(id.cloudStatus)
                 cloudStatus.text = "Disabled"
             }
         } catch (e: java.lang.Exception) {
@@ -81,35 +112,289 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
     private fun updateScreenStatusText(screenstatus: Boolean) {
         try {
             if (screenstatus) {
-                screenStatus = findViewById(R.id.screenStatus)
+                screenStatus = findViewById(id.screenStatus)
                 screenStatus.text = "Enabled"
             } else {
-                screenStatus = findViewById(R.id.screenStatus)
+                screenStatus = findViewById(id.screenStatus)
                 screenStatus.text = "Disabled"
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
+    }
 
+    private fun extractNotificationType(array: JSONArray?){
+        if (array != null) {
+            if(array.length() == 0){
+                MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
+                MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+                MainActivity.preferences.saveBoolean("arePushNotificationsActive", false)
+                haveNotificationsBeenRecieved = true
+                return
+            }
+
+            for(i in 0 until array.length()){
+                var j = JSONObject(array[i].toString())
+                if(j.get("notification_type") == "email"){
+                    MainActivity.preferences.saveBoolean("areEmailNotificationsActive", true)
+                    emailCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areEmailNotificationsActive")
+                    MainActivity.email_id = j.get("id").toString()
+                }else MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
+                if(j.get("notification_type") == "sms"){
+                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
+                    println("${MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")}")
+                    smsCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")
+                    MainActivity.sms_id = j.get("id").toString()
+                }else MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+                if(j.get("notification_type") == "push"){
+                    MainActivity.preferences.saveBoolean("arePushNotificationsActive", true)
+                    MainActivity.push_id = j.get("id").toString()
+                }else MainActivity.preferences.saveBoolean("arePushNotificationsActive", false)
+            }
+            haveNotificationsBeenRecieved = true
+        }
+    }
+
+    private fun getCurrentlyActiveNotifications(){
+        val getNotificationRequest = Request.Builder()
+            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "application/json")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .get()
+            .build()
+
+        CoroutineScope(Dispatchers.IO).launch {
+                MainActivity.client.newCall(getNotificationRequest).execute().use { response ->
+                    if(!response.isSuccessful){
+                        println("Response Unsuccessful: Code ${response.code}")
+                        println("Response from Server: ${response.body.string()}")
+                    }
+                    else extractNotificationType(JSONObject(response.body.string()).optJSONArray("data"))
+
+                }
+        }
+    }
+
+    private fun enableNotificationType(notificationMsg: String){
+
+        val enableNotificationJSON = JSONObject().put("notification_type", notificationMsg).toString()
+
+        val enableNotification = Request.Builder()
+            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "application/json")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .post(enableNotificationJSON.toRequestBody("application/json; charset=utf-8".toMediaType()))
+            .build()
+/*.toRequestBody("application/json; charset=utf-8".toMediaType())*/
+        MainActivity.client.newCall(enableNotification).execute().use { response ->
+            if(!response.isSuccessful){
+                println("Response Unsuccessful: Error Code ${response.code}")
+                println("Response from Server: ${response.body.string()}")
+            }
+        }
+    }
+
+    private fun disableNotificationType(notificationMsg: String){
+            val disableNotification = Request.Builder()
+                .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences/${notificationMsg}")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+                .delete()
+                .build()
+
+        MainActivity.client.newCall(disableNotification).execute().use { response ->
+            if (!response.isSuccessful) {
+                println("Response Unsuccessful: Error Code ${response.code}")
+                println("Response from Server: ${response.body.string()}")
+            }
+        }
     }
 
     private fun bindUI() {
 
-        buttonAdvancedSettings = findViewById(R.id.buttonAdvancedSettings)
+        val coachModels = activity.resources.getStringArray(array.CoachNames)
+        val coachModelSpinner = findViewById<Spinner>(id.CoachModelSpinner)
+        if(MainActivity.preferences.retrieveString("CoachModel") == "2026") {
+            getCurrentlyActiveNotifications()
+        }
+        if(coachModelSpinner != null){
+            val modelAdapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, coachModels)
+            coachModelSpinner.adapter = modelAdapter
+
+            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) "Other"
+            else MainActivity.preferences.retrieveString("CoachModelName")!!
+
+            coachModelSpinner.setSelection(modelAdapter.getPosition(currentCoachModel))
+            coachModelSpinner.onItemSelectedListener = object:
+            AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long){
+                    MainActivity.preferences.saveString("CoachModelName", coachModels[position])
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    val nothingSelectedToast = Toast.makeText(activity.applicationContext, "No Model Selected", Toast.LENGTH_SHORT)
+                    nothingSelectedToast.show()
+                }
+            }
+        }
+
+        val rozieVersion = activity.resources.getStringArray(array.RozieVersions)
+
+        if(rozieVersionSpinner != null){
+            val rozieAdapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, rozieVersion)
+            rozieVersionSpinner.adapter = rozieAdapter
+
+            val currentRozieVersion: String = if(MainActivity.preferences.retrieveString("RozieVersion") == null) "None"
+            else {
+                MainActivity.preferences.retrieveString("RozieVersion")!!
+            }
+
+            rozieVersionSpinner.setSelection(rozieAdapter.getPosition(currentRozieVersion))
+            rozieVersionSpinner.onItemSelectedListener = object:
+            AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long){
+                    MainActivity.preferences.saveString("RozieVersion", rozieVersion[position])
+                    if(rozieVersion[position] == "None"){
+
+                        MainActivity.cloudServiceStatus = false
+                        webView.clearCache(true)
+                        saveCloudStatus(MainActivity.cloudServiceStatus)
+                        cloudStatus = findViewById(R.id.cloudStatus)
+                        cloudStatus.text = "Disabled"
+                    }else{
+                        MainActivity.cloudServiceStatus = true
+                        webView.clearCache(true)
+                        saveCloudStatus(MainActivity.cloudServiceStatus)
+                        cloudStatus = findViewById(R.id.cloudStatus)
+                        cloudStatus.text = "Enabled"
+                    }
+
+                    if(rozieVersion[position] == "Rozie 2"){
+                        smsCheckBox.visibility = VISIBLE
+                        emailCheckBox.visibility = VISIBLE
+                    }else{
+                        smsCheckBox.visibility = GONE
+                        emailCheckBox.visibility = GONE
+                    }
+                }
+                override fun onNothingSelected(parent: AdapterView<*>) {
+                    val nothingSelectedToast = Toast.makeText(activity.applicationContext, "No Model Selected", Toast.LENGTH_SHORT)
+                    nothingSelectedToast.show()
+                }
+            }
+
+        }
+
+        val httpLoginStatus = activity.resources.getStringArray(array.HTTPAutoLogin)
+        val httpLoginSpinner = findViewById<Spinner>(id.HTTPAutoLoginSpinner)
+
+        if(httpLoginSpinner != null){
+            val httpAdapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, httpLoginStatus)
+            httpLoginSpinner.adapter = httpAdapter
+
+            var currentHTTPSetting: String = if(MainActivity.preferences.retrieveString("httpLoginSetting") == null ) "Auto Cloud Login Off"
+            else MainActivity.preferences.retrieveString("httpLoginSetting")!!
+
+            httpLoginSpinner.setSelection(httpAdapter.getPosition(currentHTTPSetting))
+            httpLoginSpinner.onItemSelectedListener = object:
+            AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                    MainActivity.preferences.saveString("httpLoginSetting", httpLoginStatus[position])
+                    MainActivity.isHTTPAutoLoginEnabled = httpLoginStatus[position]
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    val nothingSelectedToast = Toast.makeText(activity.applicationContext, "No Setting Selected", Toast.LENGTH_SHORT)
+                    nothingSelectedToast.show()
+                }
+            }
+
+        }
+
+        val coachVersions = activity.resources.getStringArray(array.Versions)
+        val versionSpinner = findViewById<Spinner>(id.VersionSpinner)
+        if(versionSpinner != null) {
+            val adapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, coachVersions)
+            versionSpinner.adapter = adapter
+
+            var currentPositionString: String = if(MainActivity.preferences.retrieveString("CoachModel") == null)
+                "Other"
+            else (MainActivity.preferences.retrieveString("CoachModel")!!)
+
+            versionSpinner.setSelection(adapter.getPosition(currentPositionString))
+            versionSpinner.onItemSelectedListener = object:
+                AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                    MainActivity.preferences.saveString("CoachModel", coachVersions[position])
+                    val previousVersion = MainActivity.preferences.retrieveString("CoachModel")
+
+                    if(coachVersions[position].toString() != previousVersion.toString()) {
+                        if((coachVersions[position].toString() != "2025") && (coachVersions[position].toString() != "2026"))
+                        {
+                            MainActivity.cloudServiceStatus = false
+                            webView.clearCache(true)
+                            saveCloudStatus(MainActivity.cloudServiceStatus)
+                            cloudStatus = findViewById(R.id.cloudStatus)
+                            cloudStatus.text = "Disabled"
+                        }
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {
+                    val nothingSelectedToast = Toast.makeText(activity.applicationContext, "No Model Selected", Toast.LENGTH_SHORT)
+                    nothingSelectedToast.show()
+                }
+            }
+        }
+
+        smsCheckBox.setOnClickListener{
+            CoroutineScope(Dispatchers.IO).launch {
+                if (smsCheckBox.isChecked) {
+                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
+                    enableNotificationType("sms")
+                } else {
+                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+                    disableNotificationType(MainActivity.sms_id)
+                }
+              //  getCurrentlyActiveNotifications()
+            }
+        }
+
+        emailCheckBox.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                if(emailCheckBox.isChecked) {
+                    MainActivity.preferences.saveBoolean("areEmailNotificationsActive", true)
+                    enableNotificationType("email")
+                } else {
+                    MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
+                    disableNotificationType(MainActivity.email_id)
+                }
+              //  getCurrentlyActiveNotifications()
+            }
+        }
+
+        if(MainActivity.usersVariantOfRozie != "identity.winegard-staging.io/login/"){ //hides checkboxes if Rozie 2 is not used
+            smsCheckBox.visibility = GONE
+            emailCheckBox.visibility = GONE
+        }
+
+        buttonAdvancedSettings = findViewById(id.buttonAdvancedSettings)
         buttonAdvancedSettings.setOnClickListener{
 
             webView.loadUrl("${getIPAddress()}/admin")
             this.cancel()
         }
 
-        buttonConnectionSettings = findViewById(R.id.buttonConnectionSettings)
+        buttonConnectionSettings = findViewById(id.buttonConnectionSettings)
         buttonConnectionSettings.setOnClickListener{
 
             webView.loadUrl("${getIPAddress()}/network")
             this.cancel()
         }
 
-        buttonOemSettings = findViewById(R.id.buttonOemSettings)
+        buttonOemSettings = findViewById(id.buttonOemSettings)
         buttonOemSettings.setOnClickListener{
 
             webView.loadUrl("${getIPAddress()}/oem")
@@ -118,56 +403,80 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
 /**************************************************************************/
 
-        enableScreenAlwaysOn = findViewById(R.id.enableScreenAlwaysOn)
+        enableScreenAlwaysOn = findViewById(id.enableScreenAlwaysOn)
         enableScreenAlwaysOn.setOnClickListener {
             MainActivity.screenAlwaysOn = true
 
             saveScreenStatus(MainActivity.screenAlwaysOn)
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-            screenStatus = findViewById(R.id.screenStatus)
+            screenStatus = findViewById(id.screenStatus)
             screenStatus.text = "Enabled"
         }
 
-        disableScreenAlwaysOn = findViewById(R.id.disableScreenAlwaysOn)
+        disableScreenAlwaysOn = findViewById(id.disableScreenAlwaysOn)
         disableScreenAlwaysOn.setOnClickListener{
             MainActivity.screenAlwaysOn = false
 
             saveScreenStatus(MainActivity.screenAlwaysOn)
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-            screenStatus = findViewById(R.id.screenStatus)
+            screenStatus = findViewById(id.screenStatus)
             screenStatus.text = "Disabled"
         }
 
         /*************************************************************************/
 
-        enableCloudFeatures = findViewById(R.id.enableCloudFeatures)
-        enableCloudFeatures.setOnClickListener{
+        enableCloudFeatures = findViewById(id.enableCloudFeatures)
+        enableCloudFeatures.setOnClickListener {
 
             MainActivity.cloudServiceStatus = true
             webView.clearCache(true)
 
+            smsCheckBox.visibility = VISIBLE
+            emailCheckBox.visibility = VISIBLE
+
             saveCloudStatus(MainActivity.cloudServiceStatus)
 
-            cloudStatus = findViewById(R.id.cloudStatus)
+            cloudStatus = findViewById(id.cloudStatus)
             cloudStatus.text = "Enabled"
-
+    /*
+            if ((rozieCoreServicesOverride) || (MainActivity.preferences.retrieveString("CoachModel") == "2025") || (MainActivity.preferences.retrieveString("CoachModel") == "2026")){
+                MainActivity.cloudServiceStatus = true
+            webView.clearCache(true)
+            saveCloudStatus(MainActivity.cloudServiceStatus)
+                cloudStatus = findViewById(id.cloudStatus)
+                cloudStatus.text = "Enabled"
+        }else{
+            val rozieWarningToast = Toast.makeText(activity.applicationContext, "Rozie Core Services unavailable for this coach model.", Toast.LENGTH_SHORT )
+            rozieWarningToast.show()
+            cloudStatus = findViewById(id.cloudStatus)
+            cloudStatus.text = "Disabled"
+        }
+*/
         }
 
-        disableCloudFeatures = findViewById(R.id.disableCloudFeatures)
+        disableCloudFeatures = findViewById(id.disableCloudFeatures)
         disableCloudFeatures.setOnClickListener{
             MainActivity.cloudServiceStatus = false
             webView.clearCache(true)
 
             saveCloudStatus(MainActivity.cloudServiceStatus)
 
-            cloudStatus = findViewById(R.id.cloudStatus)
+            if(MainActivity.sms_id.isNotBlank())   disableNotificationType(MainActivity.sms_id)
+            if(MainActivity.email_id.isNotBlank()) disableNotificationType(MainActivity.email_id)
+
+            smsCheckBox.visibility = GONE
+            emailCheckBox.visibility = GONE
+
+            MainActivity.preferences.saveString("RozieVersion", "None")
+
+            cloudStatus = findViewById(id.cloudStatus)
             cloudStatus.text = "Disabled"
 
         }
 
-        returnToAppButton = findViewById(R.id.returnToAppButton)
+        returnToAppButton = findViewById(id.returnToAppButton)
         returnToAppButton.setOnClickListener {
             this.cancel()
         }

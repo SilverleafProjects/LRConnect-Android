@@ -17,6 +17,16 @@ class Preferences(context: Context) {
         return preferences.getInt(key, 0)
     }
 
+    fun saveLong(key: String, value: Long) {
+        val editor: SharedPreferences.Editor = preferences.edit()
+        editor.putLong(key, value)
+        editor.commit()
+    }
+
+    fun retrieveLong(key: String) : Long {
+        return preferences.getLong(key, 0)
+    }
+
     fun saveString(key: String, value: String) {
         val editor: SharedPreferences.Editor = preferences.edit()
         editor.putString(key, value)

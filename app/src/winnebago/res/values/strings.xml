@@ -27,7 +27,7 @@
     <string name="button_dialog_cloud_options_disable">Disable</string>
     <string name="preference_cloud_enabled">preferenceCloudEnabled</string>
 <!--    <string name="url_cloud">https://testmyrozie.com</string>-->
-    <string name="url_cloud">https://roziecoreservices.com</string>
+    <string name="url_cloud">https://testmyrozie.com</string>
     <string name="button_dialog_wifi_not_connected_exit_app">Exit</string>
     <string name="button_dialog_wifi_not_connected_go_to_cloud_site">Cloud</string>
     <string name="text_view_dialog_wifi_not_connected_error">No Wifi Connection</string>
@@ -43,4 +43,28 @@
     <string name="button_dialog_cellular_detected_connect">Connect</string>
     <string name="button_dialog_lr_not_found_go_to_cloud">Connect to Cloud</string>
     <string name="text_view_dialog_no_internet">No Internet connection, please connect and try again.</string>
+    <string name="dialog_enter_name_and_model_year">Please enter the model name and year of your coach.</string>
+    <string-array name="Versions">
+        <item>2019</item>
+        <item>2020</item>
+        <item>2021</item>
+        <item>2022</item>
+        <item>2023</item>
+        <item>2024</item>
+        <item>2025</item>
+        <item>2026</item>
+    </string-array>
+    <string-array name = "RozieVersions">
+        <item>MyRozie</item>
+        <item>Rozie Core Services</item>
+        <item>Rozie 2</item>
+        <item>None</item>
+    </string-array>
+    <string-array name="HTTPAutoLogin">
+        <item>Auto Login On</item>
+        <item>Auto Login Off</item>
+    </string-array>
+    <string-array name="CoachNames">
+
+    </string-array>
 </resources>
