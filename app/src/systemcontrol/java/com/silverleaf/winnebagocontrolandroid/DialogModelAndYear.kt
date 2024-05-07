@@ -2,6 +2,7 @@ package com.silverleaf.winnebagocontrolandroid
 
 import android.app.Activity
 import android.app.Dialog
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.Window
@@ -61,7 +62,7 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
             val modelAdapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, coachModels)
             coachModelSpinner.adapter = modelAdapter
 
-            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) "Other"
+            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) "Newmar"
             else MainActivity.preferences.retrieveString("CoachModelName")!!
 
             coachModelSpinner.setSelection(modelAdapter.getPosition(currentCoachModel))
@@ -111,24 +112,24 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
             }
         }
 
-        buttonDialogWebService = findViewById(R.id.buttonEnableWebService)
-        buttonDialogWebService.setOnClickListener {
-
-
-                MainActivity.preferences.retrieveString("CoachModel")
-                    ?.let { it1 ->
-                        configureRozieSettingsByCoachModel(
-                            MainActivity.preferences.retrieveString(
-                                "CoachModelName"
-                            )!!, it1
-                        )
-                    }
-                MainActivity.preferences.saveBoolean("HasUserSelectedCoachModel", true)
-                MainActivity.preferences.saveBoolean("cloudServiceStatus", true)
-                MainActivity.goToCloudLogin = true
-                this.cancel()
-
-        }
+//        buttonDialogWebService = findViewById(R.id.buttonEnableWebService)
+//        buttonDialogWebService.setOnClickListener {
+//
+//
+//                MainActivity.preferences.retrieveString("CoachModel")
+//                    ?.let { it1 ->
+//                        configureRozieSettingsByCoachModel(
+//                            MainActivity.preferences.retrieveString(
+//                                "CoachModelName"
+//                            )!!, it1
+//                        )
+//                    }
+//                MainActivity.preferences.saveBoolean("HasUserSelectedCoachModel", true)
+//                MainActivity.preferences.saveBoolean("cloudServiceStatus", true)
+//                MainActivity.goToCloudLogin = true
+//                this.cancel()
+//
+//        }
 
         buttonDialogDismiss = findViewById(R.id.buttonDialogAcceptSettings)
         buttonDialogDismiss.setOnClickListener {
