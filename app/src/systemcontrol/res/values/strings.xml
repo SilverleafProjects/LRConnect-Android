@@ -63,6 +63,10 @@
         <item>SMS Notification</item>
         <item>Notifications Off</item>
     </string-array>
+    <string-array name="DisplayShutsOff">
+        <item>Display Stays On</item>
+        <item>Display Shuts Off</item>
+    </string-array>
     <string-array name="HTTPAutoLogin">
         <item> Auto Cloud Login On </item>
         <item> Auto Cloud Login Off</item>

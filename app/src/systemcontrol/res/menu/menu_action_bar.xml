@@ -20,8 +20,6 @@
     </item>
     <item android:id="@+id/systemcontrol_settingpage" android:title="Settings">
     </item>
-    <item android:id="@+id/register_to_rozie" android:title="Register">
-    </item>
     <item android:id="@+id/admin_page" android:title="@string/menu_text_admin_page" android:visible="false">
     </item>
     <item android:id="@+id/network_page" android:title="@string/menu_text_network_page" android:visible="false">

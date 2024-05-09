@@ -1,13 +1,15 @@
 //File used for the standard LR125 Control app.
 package com.silverleaf.winnebagocontrolandroid
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
-import android.net.*
+import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.Uri
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdManager.ResolveListener
 import android.net.nsd.NsdServiceInfo
@@ -28,21 +30,24 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.*
-import okhttp3.*
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import org.json.JSONArray
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 import preferences.Preferences
 import webviewsettings.setWebView
-import java.lang.Runnable
-import java.net.*
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.SocketTimeoutException
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -165,6 +170,24 @@ class MainActivity : AppCompatActivity() {
         setupLifecycleListener()
 
         if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) showDialogModelAndYear()
+
+        if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
+            val actoken = preferences.retrieveString("AccessToken")
+            val idtoken = preferences.retrieveString("IDToken")
+            val rftoken = preferences.retrieveString("RefreshToken")
+
+            if(actoken != null) {
+                winegardAccessToken = actoken
+            }
+
+            if(idtoken != null) {
+                winegardIdToken = idtoken
+            }
+
+            if(rftoken != null) {
+                winegardRefreshToken = rftoken
+            }
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -203,7 +226,6 @@ class MainActivity : AppCompatActivity() {
             R.id.network_page -> appendToIPAddress(resources.getString(R.string.route_network))
             R.id.cloud_page -> navigateToCloud()
             R.id.systemcontrol_settingpage -> navigateToSettingsPage()
-            R.id.register_to_rozie -> registerToRozieCoreServices()
             else -> println("default")
         }
         return super.onOptionsItemSelected(item)
@@ -407,7 +429,7 @@ class MainActivity : AppCompatActivity() {
         return returnString
     }
 
-    private fun hasAccessTokenTimedOut(currentTime: Long, tokenValidationTime: Long): Boolean {
+    public fun hasAccessTokenTimedOut(currentTime: Long, tokenValidationTime: Long): Boolean {
         val expiration_time = preferences.retrieveInt("AccessTimeout")
         return currentTime > (tokenValidationTime + (expiration_time * 1000))
     }
@@ -449,7 +471,7 @@ fun isInternetAvailable(context: Context): Boolean {
         return wifiManager.isWifiEnabled
     }
 
-    private fun accessKeyHasTimedOut(): Boolean{
+    public fun accessKeyHasTimedOut(): Boolean{
         return System.currentTimeMillis() > (preferences.retrieveLong(
             "TokenStartTime"
         ) + (preferences.retrieveInt("AccessTimeout") * 1000))
@@ -488,7 +510,7 @@ fun isInternetAvailable(context: Context): Boolean {
         }
     }
 
-    private fun registerToRozieCoreServices()
+    public fun registerToRozieCoreServices()
     {
         if(cloudServiceStatus) {
             if (preferences.retrieveString("AccessToken") != null) {
@@ -540,10 +562,14 @@ fun isInternetAvailable(context: Context): Boolean {
         }
     }
 
-    private fun showDialogUserInformation() {
+    public fun showDialogUserInformation() {
         val dialogUserInformation = DialogUserInformation(this, webView)
         dialogUserInformation.show()
         dialogUserInformation.window?.setLayout(dialogSide, dialogSide)
+    }
+
+    public fun wineGardLogout(){
+        MainActivity.preferences.saveInt("AccessTimeout", 0)
     }
 
     private fun showDialogNoCloudService() {
@@ -824,6 +850,7 @@ fun isInternetAvailable(context: Context): Boolean {
         supportActionBar?.setCustomView(R.layout.action_bar)
         val background : Drawable = resources.getDrawable(R.drawable.action_bar_border)
         supportActionBar?.setBackgroundDrawable(background)
+
     }
 
 }

@@ -68,8 +68,6 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             emailCheckBox.visibility = View.GONE
         }
 
-        updateCloudServiceText(MainActivity.cloudServiceStatus)
-        updateScreenStatusText(MainActivity.screenAlwaysOn)
         bindUI()
     }
 
@@ -80,34 +78,34 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
         return "$protocol$ipAddress"
     }
 
-    private fun updateCloudServiceText(cloudservice: Boolean) {
-        try {
-            if (cloudservice) {
-                cloudStatus = findViewById(id.cloudStatus)
-                cloudStatus.text = "Enabled"
-            } else {
-                cloudStatus = findViewById(id.cloudStatus)
-                cloudStatus.text = "Disabled"
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
+//    private fun updateCloudServiceText(cloudservice: Boolean) {
+//        try {
+//            if (cloudservice) {
+//                cloudStatus = findViewById(id.cloudStatus)
+//                cloudStatus.text = "Enabled"
+//            } else {
+//                cloudStatus = findViewById(id.cloudStatus)
+//                cloudStatus.text = "Disabled"
+//            }
+//        } catch (e: java.lang.Exception) {
+//            e.printStackTrace()
+//        }
+//    }
 
-    private fun updateScreenStatusText(screenstatus: Boolean) {
-        try {
-            if (screenstatus) {
-                screenStatus = findViewById(id.screenStatus)
-                screenStatus.text = "Enabled"
-            } else {
-                screenStatus = findViewById(id.screenStatus)
-                screenStatus.text = "Disabled"
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-
-    }
+//    private fun updateScreenStatusText(screenstatus: Boolean) {
+//        try {
+//            if (screenstatus) {
+//                screenStatus = findViewById(id.screenStatus)
+//                screenStatus.text = "Enabled"
+//            } else {
+//                screenStatus = findViewById(id.screenStatus)
+//                screenStatus.text = "Disabled"
+//            }
+//        } catch (e: java.lang.Exception) {
+//            e.printStackTrace()
+//        }
+//
+//    }
 
     private fun bindUI() {
 
@@ -159,14 +157,14 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                         MainActivity.cloudServiceStatus = false
                         webView.clearCache(true)
                         saveCloudStatus(MainActivity.cloudServiceStatus)
-                        cloudStatus = findViewById(R.id.cloudStatus)
-                        cloudStatus.text = "Disabled"
+//                        cloudStatus = findViewById(R.id.cloudStatus)
+//                        cloudStatus.text = "Disabled"
                     }else{
                         MainActivity.cloudServiceStatus = true
                         webView.clearCache(true)
                         saveCloudStatus(MainActivity.cloudServiceStatus)
-                        cloudStatus = findViewById(R.id.cloudStatus)
-                        cloudStatus.text = "Enabled"
+//                        cloudStatus = findViewById(R.id.cloudStatus)
+//                        cloudStatus.text = "Enabled"
                     }
 
                     if(rozieVersion[position] == "Rozie 2"){
