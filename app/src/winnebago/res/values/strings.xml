@@ -45,7 +45,6 @@
     <string name="text_view_dialog_no_internet">No Internet connection, please connect and try again.</string>
     <string name="dialog_enter_name_and_model_year">Please enter the model name and year of your coach.</string>
     <string-array name="Versions">
-        <item>2019</item>
         <item>2020</item>
         <item>2021</item>
         <item>2022</item>
@@ -53,6 +52,23 @@
         <item>2024</item>
         <item>2025</item>
         <item>2026</item>
+        <item>2027</item>
+        <item>2028</item>
+        <item>2029</item>
+        <item>2030</item>
+    </string-array>
+    <string-array name="NotificationTypes">
+        <item>Email Notifications</item>
+        <item>SMS Notification</item>
+        <item>Notifications Off</item>
+    </string-array>
+    <string-array name="DisplayShutsOff">
+        <item>Display Stays On</item>
+        <item>Display Shuts Off</item>
+    </string-array>
+    <string-array name="HTTPAutoLogin">
+        <item> Auto Cloud Login On </item>
+        <item> Auto Cloud Login Off</item>
     </string-array>
     <string-array name = "RozieVersions">
         <item>MyRozie</item>
@@ -60,11 +76,12 @@
         <item>Rozie 2</item>
         <item>None</item>
     </string-array>
-    <string-array name="HTTPAutoLogin">
-        <item>Auto Login On</item>
-        <item>Auto Login Off</item>
-    </string-array>
     <string-array name="CoachNames">
-
+        <item>Winnebago</item>
+    </string-array>
+    <string-array name="RozieServiceVariants">
+        <item>My Rozie</item>
+        <item>Rozie Core HTTP</item>
+        <item>Rozie Core Services</item>
     </string-array>
 </resources>

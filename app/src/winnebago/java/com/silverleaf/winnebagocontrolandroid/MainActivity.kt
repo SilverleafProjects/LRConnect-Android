@@ -83,6 +83,10 @@ class MainActivity : AppCompatActivity() {
         val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
         var usersVariantOfRozie: String = "identity.winegard-staging.io/login/" //temporary fox! DO NOT PUSH THIS
 
+        var email_id: String = ""
+        var sms_id: String = ""
+        var push_id: String = ""
+
         /* Sentinel values used between classes */
         var callScanNetworkOnDialogClose: Boolean = false
         var noDetectedLROnNetwork: Boolean = false
@@ -159,7 +163,6 @@ class MainActivity : AppCompatActivity() {
             R.id.network_page -> appendToIPAddress(resources.getString(R.string.route_network))
             R.id.cloud_page -> navigateToCloud()
             R.id.systemcontrol_settingpage -> navigateToSettingsPage()
-            R.id.register_to_rozie -> appendToIPAddress(registerToRozieURL)
             else -> println("default")
         }
         return super.onOptionsItemSelected(item)
@@ -536,7 +539,7 @@ class MainActivity : AppCompatActivity() {
         return "Error"
     }
 
-    private fun accessKeyHasTimedOut(): Boolean{
+    public fun accessKeyHasTimedOut(): Boolean{
         return System.currentTimeMillis() > (preferences.retrieveLong(
             "TokenStartTime"
         ) + (preferences.retrieveInt("AccessTimeout") * 1000))
@@ -570,6 +573,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    public fun wineGardLogout(){
+        MainActivity.preferences.saveInt("AccessTimeout", 0)
+    }
+
 /*
     private fun navigateToCloud()
     {
@@ -600,7 +607,7 @@ class MainActivity : AppCompatActivity() {
 */
 }
 */
-    private fun registerToRozieCoreServices()
+    public fun registerToRozieCoreServices()
     {
         if(cloudServiceStatus) {
             if (preferences.retrieveString("AccessToken") != null) {
@@ -675,7 +682,7 @@ private fun showDialogNoInternet() {
         dialogInitialModelAndYear.window?.setLayout(dialogSide, dialogSide)
     }
 
-private fun showDialogUserInformation() {
+public fun showDialogUserInformation() {
   val dialogUserInformation = DialogUserInformation(this, webView)
   dialogUserInformation.show()
   dialogUserInformation.window?.setLayout(dialogSide, dialogSide)
