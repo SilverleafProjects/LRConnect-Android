@@ -153,6 +153,9 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
             getCurrentlyActiveNotifications()
         }
+        if(MainActivity.ipAddress != "") {
+            findViewById<TextView>(R.id.HardwareIP).setText("IPAddress: ${MainActivity.ipAddress.substring(1)}")
+        }
 
         bindUI()
     }
@@ -447,6 +450,40 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             else (MainActivity.preferences.retrieveString("CoachModel")!!)
 
             yearSpinner.setSelection(adapter.getPosition(currentPositionString))
+//            yearSpinner.onItemSelectedListener = object:
+//                AdapterView.OnItemSelectedListener {
+//                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+//                    val previousVersion = MainActivity.preferences.retrieveString("CoachModel")
+//                    MainActivity.preferences.saveString("CoachModel", coachVersions[position])
+//
+//                    if(coachVersions[position] != previousVersion) {
+//                        if(coachVersions[position].toInt() >= 2026){
+//                            MainActivity.preferences.saveString("RozieVersion", "Rozie 2")
+//
+//                            rozieVersionSpinner.setSelection(2)
+//                            CloudBtn.visibility = VISIBLE
+//                            MainActivity.cloudServiceStatus = true
+//                            webView.clearCache(true)
+//                            saveCloudStatus(MainActivity.cloudServiceStatus)
+//                        }
+//                        else{
+//                            MainActivity.preferences.saveString("RozieVersion", "None")
+//
+//                            CloudBtn.visibility = GONE
+//                            rozieVersionSpinner.setSelection(3)
+//
+//                            MainActivity.cloudServiceStatus = false
+//                            webView.clearCache(true)
+//                            saveCloudStatus(MainActivity.cloudServiceStatus)
+//                        }
+//                    }
+//                }
+//
+//                override fun onNothingSelected(parent: AdapterView<*>) {
+//                    val nothingSelectedToast = Toast.makeText(activity.applicationContext, "No Model Selected", Toast.LENGTH_SHORT)
+//                    nothingSelectedToast.show()
+//                }
+//            }
         }
 
         smsCheckBox.setOnClickListener{
@@ -458,7 +495,6 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                     MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
                     disableNotificationType(MainActivity.sms_id)
                 }
-
                 //  getCurrentlyActiveNotifications()
             }
         }
@@ -472,7 +508,6 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                     MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
                     disableNotificationType(MainActivity.email_id)
                 }
-
                 //  getCurrentlyActiveNotifications()
             }
         }

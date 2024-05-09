@@ -1,79 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TextView
+        android:id="@+id/ModelText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="76dp"
+        android:text="Model"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
         android:id="@+id/dialogTextViewModelYear"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enter the model year and Rozie version of this coach."
-        android:textAlignment="center"
-        android:layout_gravity="center_vertical|center_horizontal"
         android:layout_alignParentTop="true"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_marginTop="25dp"
+        android:text="First Time Setup"
+        android:textAlignment="center"
+        android:textColor="@color/text_color"
         android:textSize="19sp"
         android:textStyle="bold"
-        android:textColor="@color/text_color"
-        android:layout_marginTop="25dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.215" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Spinner
-        android:id="@+id/RozieVersionSpinner"
-        android:layout_width="match_parent"
+        android:id="@+id/CoachModelStartupSpinner"
+        android:layout_width="115dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/dialogTextViewModelYear"
         android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="40dp"
-        android:layout_marginRight="40dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/rounded_shape"
         android:text="Select Model:"
         android:textSize="20dp"
-        />
+        app:layout_constraintStart_toStartOf="@+id/ModelText"
+        app:layout_constraintTop_toBottomOf="@+id/dialogTextViewModelYear" />
 
     <Spinner
         android:id="@+id/CoachVersionStartupSpinner"
-        android:layout_width="match_parent"
+        android:layout_width="115dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/RozieVersionSpinner"
         android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="60dp"
-        android:layout_marginRight="60dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/rounded_shape"
         android:text="Select Version:"
         android:textSize="20dp"
-        />
-
-    <Spinner
-        android:id="@+id/OnStartupAutomaticLogin"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/CoachVersionStartupSpinner"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="60dp"
-        android:layout_marginRight="60dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="20dp"
-        android:text="Select Version:"
-        android:textSize="20dp"
-        />
+        app:layout_constraintStart_toEndOf="@+id/YearText"
+        app:layout_constraintTop_toBottomOf="@+id/CoachModelStartupSpinner" />
 
     <Button
         android:id="@+id/buttonDialogAcceptSettings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="80dp"
-        android:layout_marginRight="80dp"
-        android:layout_marginBottom="15dp"
-        android:layout_alignParentBottom="true"
-        android:text="Accept" >
+        android:layout_width="150dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="76dp"
+        android:background="@drawable/rounded_shape"
+        android:textColor="@color/white"
+        android:text="Submit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.479"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/CoachVersionStartupSpinner"/>
 
-    </Button>
+    <TextView
+        android:id="@+id/YearText"
+        android:layout_width="38dp"
+        android:layout_height="21dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="124dp"
+        android:text="Year"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

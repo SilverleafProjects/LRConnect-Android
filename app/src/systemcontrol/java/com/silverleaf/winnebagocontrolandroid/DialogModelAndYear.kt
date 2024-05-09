@@ -59,7 +59,7 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
         val coachModelSpinner = findViewById<Spinner>(id.CoachModelStartupSpinner)
 
         if(coachModelSpinner != null){
-            val modelAdapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, coachModels)
+            val modelAdapter = ArrayAdapter(activity.applicationContext, R.layout.color_spinner, coachModels)
             coachModelSpinner.adapter = modelAdapter
 
             var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) "Newmar"
@@ -82,7 +82,7 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
         val versionSpinner = findViewById<Spinner>(R.id.CoachVersionStartupSpinner)
 
         if(versionSpinner != null) {
-            val adapter = ArrayAdapter(activity.applicationContext, android.R.layout.simple_spinner_item, coachVersions)
+            val adapter = ArrayAdapter(activity.applicationContext, R.layout.color_spinner, coachVersions)
             versionSpinner.adapter = adapter
 
             var currentPositionString: String = if(MainActivity.preferences.retrieveString("CoachModel") == null)

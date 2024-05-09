@@ -153,6 +153,9 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
             getCurrentlyActiveNotifications()
         }
+        if(MainActivity.ipAddress != "") {
+            findViewById<TextView>(R.id.HardwareIP).setText("IPAddress: ${MainActivity.ipAddress.substring(1)}")
+        }
 
         bindUI()
     }

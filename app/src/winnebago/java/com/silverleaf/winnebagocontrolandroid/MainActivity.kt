@@ -677,7 +677,7 @@ private fun showDialogNoInternet() {
 }
 
     private fun showDialogModelAndYear() {
-        val dialogInitialModelAndYear = DialogYear(this)
+        val dialogInitialModelAndYear = DialogModelAndYear(this)
         dialogInitialModelAndYear.show()
         dialogInitialModelAndYear.window?.setLayout(dialogSide, dialogSide)
     }
