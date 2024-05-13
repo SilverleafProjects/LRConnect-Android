@@ -198,7 +198,7 @@
                                     android:id="@+id/buttonOemSettings"
                                     android:layout_width="match_parent"
                                     android:layout_height="35dp"
-                                    android:layout_margin="15dp"
+                                    android:layout_margin="5dp"
                                     android:background="@drawable/rounded_shape"
                                     android:text="OEM"
                                     android:textColor="@color/white"/>
@@ -211,7 +211,6 @@
                                     android:background="@drawable/rounded_shape"
                                     android:text="Register"
                                     android:textColor="@color/white"
-                                    android:textSize="9sp"
                                     tools:visibility="gone" />
 
 

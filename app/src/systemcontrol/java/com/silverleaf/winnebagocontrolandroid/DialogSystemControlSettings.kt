@@ -154,7 +154,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             getCurrentlyActiveNotifications()
         }
         if(MainActivity.ipAddress != "") {
-            findViewById<TextView>(R.id.HardwareIP).setText(MainActivity.ipAddress.substring(1))
+            findViewById<TextView>(R.id.HardwareIP).setText(MainActivity.ipAddress)
         }
 
         bindUI()
@@ -275,15 +275,15 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             MainActivity.preferences.saveString("CoachModelName", coachModelSpinner.getSelectedItem().toString())
 
             if(coachModelSpinner.getSelectedItem().toString() == "Newmar"){
-                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){
-                    rozieVersionSpinner.setSelection(Rozie2)
-
-                    MainActivity.preferences.saveString("RozieVersion",rozieVersion[Rozie2])
-                }
-                else{
+//                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){
+//                    rozieVersionSpinner.setSelection(Rozie2)
+//
+//                    MainActivity.preferences.saveString("RozieVersion",rozieVersion[Rozie2])
+//                }
+//                else{
                     rozieVersionSpinner.setSelection(MyRozie)
                     MainActivity.preferences.saveString("RozieVersion",rozieVersion[MyRozie])
-                }
+//                }
             }
             else if(coachModelSpinner.getSelectedItem().toString() == "Winnebago"){
 //                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){

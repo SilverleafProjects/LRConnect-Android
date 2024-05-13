@@ -228,7 +228,6 @@
                                     android:background="@drawable/rounded_shape"
                                     android:text="Register"
                                     android:textColor="@color/white"
-                                    android:textSize="9sp"
                                     tools:visibility="gone" />
 
 
