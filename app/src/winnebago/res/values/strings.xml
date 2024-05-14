@@ -76,6 +76,7 @@
         <item>Rozie 2</item>
         <item>None</item>
     </string-array>
+    <string name="defaultCoachModel">Winnebago</string>
     <string-array name="CoachNames">
         <item>Winnebago</item>
     </string-array>

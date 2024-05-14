@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity() {
         isConnectedToCloud = false
         usingMDNSLookup = false
 
-        if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On")){
+        if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On")) {
             if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
                 val actoken = preferences.retrieveString("AccessToken")
                 val idtoken = preferences.retrieveString("IDToken")
@@ -237,8 +237,8 @@ class MainActivity : AppCompatActivity() {
             }else{
                 navigateToCloud()
             }
-        }else {
-
+        }
+        else {
             runOnUiThread {
                 dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
                 dialogNetworkScanInProgress?.show()
@@ -248,9 +248,9 @@ class MainActivity : AppCompatActivity() {
             timeoutIfLRIsNotDetected()
             udpDetectCoroutine.launch {
                 udpMessageListener()
-                while (lr125DataStorage.isEmpty()) {
-                    if (lr125DataStorage.isNotEmpty()) break
-                }
+//                while (lr125DataStorage.isEmpty()) {
+//                    if (lr125DataStorage.isNotEmpty()) break
+//                }
             }
 
             if (noDetectedLROnNetwork) {

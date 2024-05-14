@@ -9,11 +9,11 @@
         android:id="@+id/ModelText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="76dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="36dp"
         android:text="Model"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/dialogTextViewModelYear" />
 
     <TextView
         android:id="@+id/dialogTextViewModelYear"
@@ -35,51 +35,42 @@
         android:id="@+id/CoachModelStartupSpinner"
         android:layout_width="115dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="2dp"
+        android:layout_marginStart="28dp"
         android:background="@drawable/rounded_shape"
         android:text="Select Model:"
         android:textSize="20dp"
-        app:layout_constraintStart_toStartOf="@+id/ModelText"
-        app:layout_constraintTop_toBottomOf="@+id/dialogTextViewModelYear" />
+        app:layout_constraintStart_toEndOf="@+id/ModelText"
+        app:layout_constraintTop_toTopOf="@+id/ModelText" />
 
     <Spinner
         android:id="@+id/CoachVersionStartupSpinner"
         android:layout_width="115dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="2dp"
         android:background="@drawable/rounded_shape"
         android:text="Select Version:"
         android:textSize="20dp"
-        app:layout_constraintStart_toEndOf="@+id/YearText"
-        app:layout_constraintTop_toBottomOf="@+id/CoachModelStartupSpinner" />
+        app:layout_constraintStart_toStartOf="@+id/CoachModelStartupSpinner"
+        app:layout_constraintTop_toTopOf="@+id/YearText" />
 
     <Button
         android:id="@+id/buttonDialogAcceptSettings"
-        android:layout_width="150dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="76dp"
+        android:layout_width="183dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/rounded_shape"
-        android:textColor="@color/white"
         android:text="Submit"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.479"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/CoachVersionStartupSpinner"/>
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="@+id/YearText"
+        app:layout_constraintTop_toBottomOf="@+id/CoachVersionStartupSpinner" />
 
     <TextView
         android:id="@+id/YearText"
         android:layout_width="38dp"
         android:layout_height="21dp"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="124dp"
+        android:layout_marginTop="16dp"
         android:text="Year"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="@+id/ModelText"
+        app:layout_constraintTop_toBottomOf="@+id/ModelText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

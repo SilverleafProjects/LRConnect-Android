@@ -91,8 +91,17 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
         val currentRozieVersion: String = if(MainActivity.preferences.retrieveString("RozieVersion") == null) "None"
         else MainActivity.preferences.retrieveString("RozieVersion")!!
 
+        var regBtn = findViewById<Button>(R.id.RegisterBtn)
+
         if(currentRozieVersion != "Rozie 2") {
             CloudBtn.visibility = GONE
+            regBtn.visibility = GONE
+        }
+        else if(activity.accessKeyHasTimedOut()){
+            regBtn.visibility = GONE
+        }
+        else {
+            regBtn.visibility = VISIBLE
         }
 
         GeneralTab.visibility  = LinearLayout.VISIBLE
@@ -136,7 +145,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             activity.wineGardLogout()
         };
 
-        findViewById<Button>(R.id.RegisterBtn).setOnClickListener {
+        regBtn.setOnClickListener {
             activity.registerToRozieCoreServices()
         };
 
@@ -315,11 +324,21 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
             //rozieVersionSpinner.setSelection(0)
 
+            var regBtn = findViewById<Button>(R.id.RegisterBtn)
             if(rozieVersionSpinner.getSelectedItem().toString() == "Rozie 2"){
+
                 CloudBtn.visibility = VISIBLE
+
+                if(activity.accessKeyHasTimedOut()){
+                    regBtn.visibility = GONE
+                }
+                else {
+                    regBtn.visibility = VISIBLE
+                }
             }
             else{
                 CloudBtn.visibility = GONE
+                regBtn.visibility = GONE
             }
 
         }
@@ -390,7 +409,16 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                         saveCloudStatus(MainActivity.cloudServiceStatus)
                     }
 
+                    var regBtn = findViewById<Button>(R.id.RegisterBtn)
                     if(rozieVersion[position] == "Rozie 2"){
+
+                        if(activity.accessKeyHasTimedOut()){
+                            regBtn.visibility = GONE
+                        }
+                        else {
+                            regBtn.visibility = VISIBLE
+                        }
+
                         CloudBtn.visibility = VISIBLE
                     }
                     else{
