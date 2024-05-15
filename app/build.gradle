@@ -23,15 +23,15 @@ android {
         winnebago {
             applicationId "com.silverleaf.winnebagocontrolandroid"
             namespace = "com.silverleaf.winnebagocontrolandroid"
-            versionName "1.07"
-            versionCode 9
+            versionName "1.08"
+            versionCode 10
         }
 
         systemcontrol {
             applicationId "com.silverleaf.lrgizmo"
             namespace = "com.silverleaf.lrgizmo"
-            versionName "1.25"
-            versionCode 29
+            versionName "1.26"
+            versionCode 31
         }
 
     }
