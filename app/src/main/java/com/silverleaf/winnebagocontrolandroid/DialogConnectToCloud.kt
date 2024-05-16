@@ -10,13 +10,13 @@ import android.widget.Button
 import android.widget.TextView
 import com.silverleaf.lrgizmo.R
 
-class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activity) {
+class DialogConnectToCloud(activity: MainActivity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogConnectToCloudConnect: Button
     private lateinit var buttonDialogConnectToCloudCancel: Button
     private lateinit var textViewNoInternet: TextView
 
     private var webView: WebView
-    private var activity: Activity
+    private var activity: MainActivity
     init {
         setCancelable(false)
         webView.also{ this.webView = it }
@@ -42,9 +42,7 @@ class DialogConnectToCloud(activity: Activity, webView: WebView): Dialog(activit
         buttonDialogConnectToCloudConnect.setOnClickListener {
          //   if(MainActivity.internetAvailable) {
                 textViewNoInternet.visibility = View.INVISIBLE
-                webView.post(Runnable {
-                    webView.loadUrl(activity.resources.getString(R.string.url_cloud))
-                })
+                activity.navigateToCloud();
                 this.cancel()
             /*
             } else {

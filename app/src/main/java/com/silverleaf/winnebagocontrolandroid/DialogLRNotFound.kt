@@ -63,14 +63,14 @@ private fun scanForNSD(){
     )
 }
 
-class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
+class DialogLRNotFound(activity: MainActivity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogLRNotFoundRescan: Button
     private lateinit var buttonDialogLRNotFoundCloud: Button
     private lateinit var buttonCancel: Button
     private lateinit var textViewNoInternet: TextView
 
     private var webView: WebView
-    private var activity: Activity
+    private var activity: MainActivity
 
     init {
         setCancelable(false);
@@ -101,10 +101,7 @@ class DialogLRNotFound(activity: Activity, webView: WebView): Dialog(activity) {
             MainActivity.callScanNetworkOnDialogClose = false
           //  if(MainActivity.internetAvailable) {
                 textViewNoInternet.visibility = View.INVISIBLE
-                webView.post(Runnable {
-                    webView.loadUrl(MainActivity.usersVariantOfRozie)
-                    MainActivity.goToCloud = true
-                })
+                  activity.navigateToCloud();
                 this.cancel()
             /*
             } else {

@@ -15,9 +15,9 @@ import android.widget.TextView
 import android.widget.*
 import com.silverleaf.lrgizmo.R.*
 
-class DialogModelAndYear(activity: Activity): Dialog(activity) {
+class DialogModelAndYear(activity: MainActivity): Dialog(activity) {
 
-    private var activity: Activity
+    private var activity: MainActivity
 
     lateinit var buttonDialogDismiss: Button
     lateinit var buttonDialogWebService: Button
@@ -36,11 +36,21 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
 //            }
 //        }else{
             when(coachmodel) {
-                "Winnebago" -> MainActivity.preferences.saveString("RozieVersion", "Rozie Core Services")
-                "Newmar" -> MainActivity.preferences.saveString("RozieVersion", "MyRozie")
-                else -> MainActivity.preferences.saveString("RozieVersion", "MyRozie")
+                "Winnebago" -> {
+                    MainActivity.preferences.saveString("RozieVersion", "Rozie Core Services")
+                    MainActivity.usersVariantOfRozie = "roziecoreservices.com"
+                }
+                "Newmar" -> {
+                    MainActivity.preferences.saveString("RozieVersion", "MyRozie")
+                    MainActivity.usersVariantOfRozie = "myrozie.com"
+                }
+                else -> {
+                    MainActivity.preferences.saveString("RozieVersion", "MyRozie")
+                    MainActivity.usersVariantOfRozie = "myrozie.com"
+                }
             }
 //        }
+
     }
 
     fun saveCloudStatus(token: Boolean) {
@@ -151,6 +161,7 @@ class DialogModelAndYear(activity: Activity): Dialog(activity) {
             MainActivity.preferences.saveBoolean("cloudServiceStatus", false)
             this.cancel()
 
+            activity.setNetworkChangeCallBack()
         }
 
     }

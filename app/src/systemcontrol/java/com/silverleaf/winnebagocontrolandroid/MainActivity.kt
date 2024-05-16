@@ -164,12 +164,22 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.heightPixels
         ) / 10
 
+        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
+            "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
+            "Rozie 2" -> "roziecoreservices.com/rozie2"//println("Variant: Rozie 2") //Scott's APE
+            "MyRozie" -> "myrozie.com/"
+            "None" -> ""
+            else -> "myrozie.com/"
+        }
 
         bindUI()
-        setNetworkChangeCallBack()
+        if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) {
+            showDialogModelAndYear()
+        }
+        else{
+            setNetworkChangeCallBack()
+        }
         setupLifecycleListener()
-
-        if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) showDialogModelAndYear()
 
         if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
             val actoken = preferences.retrieveString("AccessToken")
@@ -482,7 +492,7 @@ fun isInternetAvailable(context: Context): Boolean {
      * R.string.url_cloud might be set to test site. // currently correct.
      */
 
-    private fun navigateToCloud()
+    public fun navigateToCloud()
     {
         if(cloudServiceStatus || (preferences.retrieveString("RozieVersion") != "None")){
 
@@ -606,13 +616,6 @@ fun isInternetAvailable(context: Context): Boolean {
                 navigateToCloud()
                 getUserInformationOnClose = false
             }
-            usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
-                "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
-                "Rozie 2" -> "identity.winegard-staging.io/login/"//println("Variant: Rozie 2") //Scott's APE
-                "MyRozie" -> "myrozie.com/"
-                "None" -> "None Selected"
-                else -> "myrozie.com/"
-            }
         }
     }
 
@@ -721,7 +724,7 @@ fun isInternetAvailable(context: Context): Boolean {
         return true
     }
 
-    private fun setNetworkChangeCallBack() {
+    public fun setNetworkChangeCallBack() {
         val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val link: LinkProperties? =

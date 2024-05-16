@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity() {
     private var lastNetwork: Network? = null
     private val lifecycleListener: LifecycleListener by lazy {
         LifecycleListener(webView)
-
     }
 
     companion object {
@@ -81,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         var failedToDiscoverLR: Boolean = true
         lateinit var preferences: Preferences
         val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
-        var usersVariantOfRozie: String = "identity.winegard-staging.io/login/" //temporary fox! DO NOT PUSH THIS
+        var usersVariantOfRozie: String = "" //temporary fox! DO NOT PUSH THIS
 
         var email_id: String = ""
         var sms_id: String = ""
@@ -135,13 +134,44 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.widthPixels,
             resources.displayMetrics.heightPixels
         ) / 10
+
+        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
+            "Rozie Core Services" -> "roziecoreservices.com"
+            "Rozie 2" -> "roziecoreservices.com/rozie2"
+            "MyRozie" -> "myrozie.com/"
+            "None" -> ""
+            else -> "myrozie.com/"
+        }
+
         bindUI()
 
-        setNetworkChangeCallBack()
+        if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) {
+            showDialogModelAndYear()
+        }
+        else{
+            setNetworkChangeCallBack()
+        }
+
         setupLifecycleListener()
 
-        if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) showDialogModelAndYear()
-    }
+        if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
+            val actoken = preferences.retrieveString("AccessToken")
+            val idtoken = preferences.retrieveString("IDToken")
+            val rftoken = preferences.retrieveString("RefreshToken")
+
+            if(actoken != null) {
+                winegardAccessToken = actoken
+            }
+
+            if(idtoken != null) {
+                winegardIdToken = idtoken
+            }
+
+            if(rftoken != null) {
+                winegardRefreshToken = rftoken
+            }
+        }
+}
 
     private fun setupLifecycleListener() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleListener)
@@ -545,7 +575,7 @@ class MainActivity : AppCompatActivity() {
         ) + (preferences.retrieveInt("AccessTimeout") * 1000))
     }
 
-    private fun navigateToCloud()
+    public fun navigateToCloud()
     {
         if(cloudServiceStatus || (preferences.retrieveString("RozieVersion") != "None")){
 
@@ -658,14 +688,6 @@ private fun refreshPage() {
                 getUserInformationOnClose = false
             }
             */
-
-            usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
-                "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
-                "Rozie 2" -> "identity.winegard-staging.io/login/"//println("Variant: Rozie 2") //Scott's APE
-                "MyRozie" -> "myrozie.com/"
-                "None" -> "None Selected"
-                else -> "myrozie.com/"
-            }
         }
 
     }
@@ -815,7 +837,7 @@ private fun ipAddressIsValid(ipToValidate: String): Boolean {
   return true
 }
 
-private fun setNetworkChangeCallBack() {
+public fun setNetworkChangeCallBack() {
   val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       val link: LinkProperties? =
