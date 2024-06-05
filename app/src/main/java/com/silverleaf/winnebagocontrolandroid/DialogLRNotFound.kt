@@ -94,8 +94,8 @@ class DialogLRNotFound(activity: MainActivity, webView: WebView): Dialog(activit
         buttonDialogLRNotFoundRescan.setOnClickListener {
             MainActivity.callScanNetworkOnDialogClose = true
             this.cancel()
-
         }
+
         buttonDialogLRNotFoundCloud = findViewById(R.id.lrNotFoundGoToCloud)
         buttonDialogLRNotFoundCloud.setOnClickListener {
             MainActivity.callScanNetworkOnDialogClose = false
@@ -108,7 +108,7 @@ class DialogLRNotFound(activity: MainActivity, webView: WebView): Dialog(activit
                 MainActivity.goToCloud = false
                 textViewNoInternet.visibility = View.VISIBLE
             }
-*/
+            */
         }
 
     }

@@ -18,39 +18,48 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
     init {
         setCancelable(false)
         activity.also { this.activity = it }
+    }
 
+    private fun startScan(){
+        dialogNotCancelled = true
+
+        CoroutineScope(Dispatchers.IO).launch {
+            var counter = 0
+            while(dialogNotCancelled) {
+
+                if(MainActivity.isConnectedToLR || MainActivity.isConnectedToCloud) {
+                    cancel()
+                }
+
+                counter++
+                setMessageText(counter)
+                delay(600)
+
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_network_scan_in_progress)
-        this.setCanceledOnTouchOutside(true)
+        //this.setCanceledOnTouchOutside(true)
 
         bindUI()
-
-        CoroutineScope(Dispatchers.IO).launch {
-            var counter = 0
-            while(dialogNotCancelled) {
-                if(MainActivity.isConnectedToLR) {
-                    closeDialog()
-                }
-                if(MainActivity.isConnectedToCloud){
-                    closeDialog()
-                }
-                counter++
-                setMessageText(counter)
-                delay(600)
-            }
-        }
     }
 
+    override fun setOnShowListener(listener: DialogInterface.OnShowListener?) {
+        super.setOnShowListener(listener)
+
+    }
+
+    override fun show() {
+        super.show()
+
+        startScan()
+    }
 
     override fun cancel() {
-        this.dialogNotCancelled = false
-        super.cancel()
-    }
-    private fun closeDialog() {
         this.dialogNotCancelled = false
         super.cancel()
     }

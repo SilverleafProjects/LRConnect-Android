@@ -15,7 +15,6 @@ class LifecycleListener(webView: WebView) : DefaultLifecycleObserver{
         override fun onStart(owner: LifecycleOwner) {
             Log.d("SampleLifecycle", "Returning to foreground…")
             webView.post(Runnable {
-
                 webView.loadUrl("javascript:appEvent('InForeground')")
             })
         }

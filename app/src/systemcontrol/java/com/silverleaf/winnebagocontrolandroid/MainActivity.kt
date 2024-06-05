@@ -28,17 +28,16 @@ import android.webkit.WebView
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.MainThread
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import org.json.JSONObject
 import preferences.Preferences
@@ -80,6 +79,8 @@ class MainActivity : AppCompatActivity() {
         LifecycleListener(webView)
     }
 
+    final var UDPtimeout: Int = 5000;
+
     companion object {
 
         var ipAddress: String = ""
@@ -96,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         lateinit var preferences: Preferences
         val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
         var failedToDiscoverLR: Boolean = true
-        var usersVariantOfRozie: String = String()
+//        var usersVariantOfRozie: String = String()
 
         var email_id: String = ""
         var sms_id: String = ""
@@ -128,6 +129,11 @@ class MainActivity : AppCompatActivity() {
         var winegardRefreshToken: String = String()
         var registerToRozieURL: String = String()
         private var haveNotificationsBeenRecieved: Boolean = false
+
+        var UDPLock: Mutex = Mutex()
+
+        @kotlin.jvm.JvmField
+        var NSDLock: Boolean = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,23 +142,28 @@ class MainActivity : AppCompatActivity() {
 
         NSDManager = getSystemService(Context.NSD_SERVICE) as NsdManager
 
+        dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+
         preferences = Preferences(this)
-        if (preferences.retrieveString("token") != null) {
-            val token = preferences.retrieveString("token")
-        }
 
         try {
-
             if (preferences.retrieveBoolean("screenAlwaysOnStatus") != null) {
                 val screenstat = preferences.retrieveBoolean("screenAlwaysOnStatus")
                 screenAlwaysOn = screenstat
                 println("Screen status: $screenstat")
-            } else screenAlwaysOn = false
+            }
+            else {
+                screenAlwaysOn = false
+            }
+
             if (preferences.retrieveBoolean("cloudServiceStatus") != null) {
                 val cloudstat = preferences.retrieveBoolean("cloudServiceStatus")
                 cloudServiceStatus = cloudstat
                 println("Cloud status: $cloudstat")
-            } else cloudServiceStatus = false
+            }
+            else {
+                cloudServiceStatus = false
+            }
 
 
         } catch (e: Exception) {
@@ -164,21 +175,23 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.heightPixels
         ) / 10
 
-        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
-            "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
-            "Rozie 2" -> "roziecoreservices.com/rozie2"//println("Variant: Rozie 2") //Scott's APE
-            "MyRozie" -> "myrozie.com/"
-            "None" -> ""
-            else -> "myrozie.com/"
-        }
+//        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
+//            "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
+//            "Rozie 2" -> "roziecoreservices.com/rozie2"//println("Variant: Rozie 2") //Scott's APE
+//            "MyRozie" -> "myrozie.com/"
+//            "None" -> ""
+//            else -> "myrozie.com/"
+//        }
 
         bindUI()
+
         if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) {
             showDialogModelAndYear()
         }
-        else{
+        else {
             setNetworkChangeCallBack()
         }
+
         setupLifecycleListener()
 
         if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
@@ -226,7 +239,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-
             R.id.main_page -> returnToHomeScreen("")
             R.id.refresh -> refreshPage()
             R.id.scan_network -> scanNetwork("")
@@ -257,6 +269,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     fun scanNetwork(route: String=""){
         isConnectedToLR = false
         isConnectedToCloud = false
@@ -267,6 +280,7 @@ class MainActivity : AppCompatActivity() {
                 val actoken = preferences.retrieveString("AccessToken")
                 val idtoken = preferences.retrieveString("IDToken")
                 val rftoken = preferences.retrieveString("RefreshToken")
+
                 webView.post(kotlinx.coroutines.Runnable {
                     webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
                 })
@@ -282,39 +296,49 @@ class MainActivity : AppCompatActivity() {
         else
         {
             runOnUiThread {
-                dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+//                if(dialogNetworkScanInProgress == null) {
+//                    dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+//                }
+//                println("Showing")
                 dialogNetworkScanInProgress?.show()
                 dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
             }
 
-            timeoutIfLRIsNotDetected()
+//            timeoutIfLRIsNotDetected()
+
             udpDetectCoroutine.launch {
-                udpMessageListener()
-                while (lr125DataStorage.isEmpty()) {
-                    if (lr125DataStorage.isNotEmpty()) break
+                UDPLock.withLock {
+                    udpMessageListener()
                 }
             }
 
             if (noDetectedLROnNetwork) {
+//                println("NSDLock - No LR detected");
                 isConnectedToLR = false
                 usingMDNSLookup = true
+
                 lrDetectCoroutine.launch {
-                    NSDManager.discoverServices(
-                        "_http._tcp",
-                        NsdManager.PROTOCOL_DNS_SD,
-                        NSDListener
-                    )
+                    if(!NSDLock) {
+//                        println("NSDLock - Starting discovery service");
+
+                        NSDManager.discoverServices(
+                            "_http._tcp",
+                            NsdManager.PROTOCOL_DNS_SD,
+                            NSDListener
+                        )
+                    }
                 }
             }
 
             Handler().postDelayed({
+                dialogNetworkScanInProgress?.cancel()
                 if (lr125DataStorage.isEmpty() && (NSDListener.serviceList.size == 0)) {
                     showDialogLRNotFound()
                 } else {
                     isConnectedToLR = true
                     setIPAddressToLR125(route)
                 }
-            }, 3000)
+            }, UDPtimeout.toLong())
         }
     }
 
@@ -386,25 +410,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun udpMessageListener(): Unit {
 
-            udpListenerSocket.soTimeout = 5000
+        udpListenerSocket.soTimeout = UDPtimeout
         try {
-                val buffer = ByteArray(4096)
-                val timestamp = System.currentTimeMillis() / 1000
-                val udpPacket = DatagramPacket(buffer, buffer.size)
+            noDetectedLROnNetwork = true;
 
-                udpListenerSocket.receive(udpPacket)
+            val buffer = ByteArray(4096)
+            val timestamp = System.currentTimeMillis() / 1000
 
-                var incomingAddress = udpPacket.address
-                var incomingMessage = convertByteArray(udpPacket.data)
+            val udpPacket = DatagramPacket(
+                buffer,
+                buffer.size
+            )
 
-                var timestampedPacket = Pair(first = timestamp, second = incomingMessage)
+            udpListenerSocket.receive(udpPacket)
 
-                if (incomingAddress != null) {
-                    lr125DataStorage.put(incomingAddress, timestampedPacket)
-                    noDetectedLROnNetwork = false
-                } else {
-                    udpMessageListener()
-                }
+            var incomingAddress = udpPacket.address
+            var incomingMessage = convertByteArray(udpPacket.data)
+
+            var timestampedPacket = Pair(first = timestamp, second = incomingMessage)
+
+            if (incomingAddress != null) {
+                lr125DataStorage.put(incomingAddress, timestampedPacket)
+                noDetectedLROnNetwork = false
+            } else {
+                udpMessageListener()
+            }
         } catch (e: SocketTimeoutException) {
             e.printStackTrace()
             udpDetectCoroutine.cancel()
@@ -421,7 +451,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 dialogNetworkScanInProgress!!.cancel()
             }
-        }, 5, TimeUnit.SECONDS)
+        }, (UDPtimeout/1000).toLong(), TimeUnit.SECONDS)
     }
 
     /*******************************************************/
@@ -439,7 +469,7 @@ class MainActivity : AppCompatActivity() {
         return returnString
     }
 
-    public fun hasAccessTokenTimedOut(currentTime: Long, tokenValidationTime: Long): Boolean {
+    private fun hasAccessTokenTimedOut(currentTime: Long, tokenValidationTime: Long): Boolean {
         val expiration_time = preferences.retrieveInt("AccessTimeout")
         return currentTime > (tokenValidationTime + (expiration_time * 1000))
     }
@@ -473,7 +503,7 @@ fun isInternetAvailable(context: Context): Boolean {
             "Rozie Core Services" -> return "roziecoreservices.com"
             "None" -> return "None"
         }
-        return "Error"
+        return ""
     }
 
     fun isInternetAvailable(): Boolean {
@@ -498,8 +528,20 @@ fun isInternetAvailable(context: Context): Boolean {
 
             if(preferences.retrieveString("RozieVersion") != "Rozie 2")
             {
-                loadURL(currentRozieAddress())
-                isConnectedToCloud = true
+                var curURL = currentRozieAddress();
+
+                if(curURL != ""){
+                    loadURL(curURL)
+                    isConnectedToCloud = true
+                }
+                else{
+                    println("Bad RozieAddress");
+
+                    showDialogNoCloudService()
+                    isConnectedToCloud = false
+                }
+
+
             }else if(preferences.retrieveString("RozieVersion") == "Rozie 2"){
 
                 if((preferences.retrieveString("AccessToken") == null) || (accessKeyHasTimedOut())) runBlocking {showDialogUserInformation()} //if access has timed out or we have no token, prompt user information
@@ -601,7 +643,7 @@ fun isInternetAvailable(context: Context): Boolean {
     private fun navigateToSettingsPage() {
 
         val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
-        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
+        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 8 / 10
 
         val dialogSettingsMenu = DialogSystemControlSettings(this, webView)
 
@@ -640,7 +682,12 @@ fun isInternetAvailable(context: Context): Boolean {
         val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 5 / 10
 
         callScanNetworkOnDialogClose = true
-       dialogLRNotFound = DialogLRNotFound(this, webView)
+
+//        if (dialogNetworkScanInProgress?.isShowing == true) {
+//            dialogNetworkScanInProgress?.dismiss()
+//        }
+
+        dialogLRNotFound = DialogLRNotFound(this, webView)
         dialogLRNotFound?.show()
         dialogLRNotFound?.window?.setLayout(widthDialog, heightDialog)
 
@@ -653,14 +700,12 @@ fun isInternetAvailable(context: Context): Boolean {
                 println("Cloud Service: ${preferences.retrieveBoolean("screenAlwaysOnStatus")}")
                 if(!cloudServiceStatus){
                     cloudServiceStatus = true
-                    preferences.saveBoolean("screenAlwaysOnStatus", true)
-                    println("Cloud Service is set to: ${preferences.retrieveBoolean("screenAlwaysOnStatus")}")
+//                    preferences.saveBoolean("screenAlwaysOnStatus", true)
+//                    println("Cloud Service is set to: ${preferences.retrieveBoolean("screenAlwaysOnStatus")}")
                 }
+
                 if (dialogLRNotFound?.isShowing == true) {
                     dialogLRNotFound?.dismiss()
-                }
-                if (dialogNetworkScanInProgress?.isShowing == true) {
-                    dialogNetworkScanInProgress?.dismiss()
                 }
             }
         }

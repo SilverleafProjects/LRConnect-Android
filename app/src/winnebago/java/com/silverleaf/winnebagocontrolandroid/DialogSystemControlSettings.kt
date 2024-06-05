@@ -21,7 +21,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.screenAlwaysOn
-import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.usersVariantOfRozie
 import kotlinx.coroutines.*
 import okhttp3.internal.http.HTTP_GONE
 import org.json.JSONArray

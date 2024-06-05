@@ -9,9 +9,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import kotlinx.coroutines.sync.Mutex;
+
 public class DiscoveryListener implements NsdManager.DiscoveryListener {
     final int SLEEP_TIME_MILLISEC = 1200;
     long startTime;
+
     private List<NsdServiceInfo> serviceList = Collections.synchronizedList(new LinkedList<>());
 
     public List<NsdServiceInfo> getServiceList() {
@@ -29,6 +32,7 @@ public class DiscoveryListener implements NsdManager.DiscoveryListener {
     @Override
     public void onDiscoveryStarted(String s) {
         startTime = System.currentTimeMillis();
+        MainActivity.NSDLock = true;
     }
 
     @Override
@@ -36,7 +40,6 @@ public class DiscoveryListener implements NsdManager.DiscoveryListener {
         if(nsdServiceInfo.toString().contains("LR125")) {
             serviceList.add(nsdServiceInfo);
         }
-
     }
 
     @Override
@@ -49,14 +52,17 @@ public class DiscoveryListener implements NsdManager.DiscoveryListener {
 
     @Override
     public void onDiscoveryStopped(String s) {
+        MainActivity.NSDLock = false;
     }
 
     @Override
     public void onStartDiscoveryFailed(String s, int i) {
+        MainActivity.NSDLock = false;
     }
 
     @Override
     public void onStopDiscoveryFailed(String s, int i) {
+        MainActivity.NSDLock = false;
     }
 
 

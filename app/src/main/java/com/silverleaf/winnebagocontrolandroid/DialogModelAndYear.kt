@@ -38,15 +38,15 @@ class DialogModelAndYear(activity: MainActivity): Dialog(activity) {
             when(coachmodel) {
                 "Winnebago" -> {
                     MainActivity.preferences.saveString("RozieVersion", "Rozie Core Services")
-                    MainActivity.usersVariantOfRozie = "roziecoreservices.com"
+//                    MainActivity.usersVariantOfRozie = "roziecoreservices.com"
                 }
                 "Newmar" -> {
                     MainActivity.preferences.saveString("RozieVersion", "MyRozie")
-                    MainActivity.usersVariantOfRozie = "myrozie.com"
+//                    MainActivity.usersVariantOfRozie = "myrozie.com"
                 }
                 else -> {
                     MainActivity.preferences.saveString("RozieVersion", "MyRozie")
-                    MainActivity.usersVariantOfRozie = "myrozie.com"
+//                    MainActivity.usersVariantOfRozie = "myrozie.com"
                 }
             }
 //        }
@@ -72,7 +72,8 @@ class DialogModelAndYear(activity: MainActivity): Dialog(activity) {
             val modelAdapter = ArrayAdapter(activity.applicationContext, R.layout.color_spinner, coachModels)
             coachModelSpinner.adapter = modelAdapter
 
-            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) activity.resources.getString(R.string.defaultCoachModel)
+            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null)
+                activity.resources.getString(R.string.defaultCoachModel)
             else MainActivity.preferences.retrieveString("CoachModelName")!!
 
             coachModelSpinner.setSelection(modelAdapter.getPosition(currentCoachModel))
@@ -145,7 +146,8 @@ class DialogModelAndYear(activity: MainActivity): Dialog(activity) {
         buttonDialogDismiss = findViewById(R.id.buttonDialogAcceptSettings)
         buttonDialogDismiss.setOnClickListener {
 
-            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null) activity.resources.getString(R.string.defaultCoachModel)
+            var currentCoachModel: String = if(MainActivity.preferences.retrieveString("CoachModelName") == null)
+                activity.resources.getString(R.string.defaultCoachModel)
             else MainActivity.preferences.retrieveString("CoachModelName")!!
 
             var currentPositionString: String = if(MainActivity.preferences.retrieveString("CoachModel") == null)

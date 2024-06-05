@@ -12,14 +12,11 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import com.silverleaf.lrgizmo.R
-import kotlinx.coroutines.*
 import preferences.Preferences
-import java.lang.Runnable
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.properties.Delegates
 
 class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activity) {
     private lateinit var buttonDialogEnterIPAddressAccept: Button
@@ -60,7 +57,6 @@ class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activit
         val ipAddress = editTextDialogEnterIPAddress.text!!.toString()
         preferences.saveString("IP", ipAddress)
 
-
         MainActivity.ipAddress = ipAddress
 
         this.cancel()
@@ -94,13 +90,8 @@ class DialogEnterIPAddress(activity: Activity, webView: WebView): Dialog(activit
         firstByte = ipAddress!!.split(".")[0]
         secondByte = ipAddress!!.split(".")[1]
 
-        if(MainActivity.preferences.retrieveString("IP") == null){
-            val url = "$firstByte.$secondByte."
-            editTextDialogEnterIPAddress.setText(url)
-        }else{
-            val url = "$firstByte.$secondByte."
-            editTextDialogEnterIPAddress.setText(url)
-        }
+        val url = "$firstByte.$secondByte."
+        editTextDialogEnterIPAddress.setText(url)
     }
 
     @Throws(UnknownHostException::class)

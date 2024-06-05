@@ -9,7 +9,7 @@
         android:id="@+id/dialogTextViewNoCloud"
         android:layout_width="300dp"
         android:layout_height="175dp"
-        android:text="Cloud services are currently disabled, enable them to access Rozie Core Services."
+        android:text="Cloud services are currently disabled, Choose your server destination in the advanced settings menu."
         android:textAlignment="center"
         android:textSize="19sp"
         android:textStyle="bold"

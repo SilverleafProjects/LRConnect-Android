@@ -32,6 +32,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import preferences.Preferences
 import scannetwork.MdnsHandler
@@ -64,8 +66,9 @@ class MainActivity : AppCompatActivity() {
         LifecycleListener(webView)
     }
 
-    companion object {
+    final var UDPtimeout: Int = 5000;
 
+    companion object {
         var ipAddress: String = ""
         var valueCallBack: ValueCallback<Array<Uri>>? = null
         val lr125DataStorage = mutableMapOf<InetAddress, Pair<Long, String>?>()
@@ -80,8 +83,8 @@ class MainActivity : AppCompatActivity() {
         var failedToDiscoverLR: Boolean = true
         lateinit var preferences: Preferences
         val udpDetectCoroutine = CoroutineScope(Dispatchers.IO)
-        var usersVariantOfRozie: String = "" //temporary fox! DO NOT PUSH THIS
-
+//        var usersVariantOfRozie: String = "" //temporary fox! DO NOT PUSH THIS
+//
         var email_id: String = ""
         var sms_id: String = ""
         var push_id: String = ""
@@ -114,6 +117,12 @@ class MainActivity : AppCompatActivity() {
         var winegardRefreshToken: String = String()
         var registerToRozieURL: String = String()
 
+
+        var UDPLock: Mutex = Mutex()
+
+        @kotlin.jvm.JvmField
+        var NSDLock: Boolean = false
+
         fun saveTokenToPreferences(token: String) {
             preferences.saveString("token", token)
         }
@@ -125,26 +134,29 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         NSDManager = getSystemService(Context.NSD_SERVICE) as NsdManager
-
+        dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
         preferences = Preferences(this)
-        if (preferences.retrieveString("token") != null) {
-            val token = preferences.retrieveString("token")
-        }
+
+//        if (preferences.retrieveString("token") != null) {
+//            val token = preferences.retrieveString("token")
+//        }
+
         dialogSide = 9 * Math.min(
             resources.displayMetrics.widthPixels,
             resources.displayMetrics.heightPixels
         ) / 10
 
-        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
-            "Rozie Core Services" -> "roziecoreservices.com"
-            "Rozie 2" -> "roziecoreservices.com/rozie2"
-            "MyRozie" -> "myrozie.com/"
-            "None" -> ""
-            else -> "myrozie.com/"
-        }
+//        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
+//            "Rozie Core Services" -> "roziecoreservices.com"
+//            "Rozie 2" -> "roziecoreservices.com/rozie2"
+//            "MyRozie" -> "myrozie.com/"
+//            "None" -> ""
+//            else -> "myrozie.com/"
+//        }
 
         bindUI()
 
+        //first time boot show dialog, or setNetwork callback...
         if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) {
             showDialogModelAndYear()
         }
@@ -178,8 +190,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-            menuInflater.inflate(R.menu.menu_action_bar, menu)
-            return true
+        menuInflater.inflate(R.menu.menu_action_bar, menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -251,11 +263,12 @@ class MainActivity : AppCompatActivity() {
         isConnectedToCloud = false
         usingMDNSLookup = false
 
-        if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On")) {
+        if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On") && (preferences.retrieveBoolean("cloudServiceStatus"))){
             if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
                 val actoken = preferences.retrieveString("AccessToken")
                 val idtoken = preferences.retrieveString("IDToken")
                 val rftoken = preferences.retrieveString("RefreshToken")
+
                 webView.post(kotlinx.coroutines.Runnable {
                     webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
                 })
@@ -268,41 +281,50 @@ class MainActivity : AppCompatActivity() {
                 navigateToCloud()
             }
         }
-        else {
+        else
+        {
             runOnUiThread {
-                dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+//                if(dialogNetworkScanInProgress == null) {
+//                    dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
+//                }
                 dialogNetworkScanInProgress?.show()
                 dialogNetworkScanInProgress?.window?.setLayout(dialogSide, dialogSide)
             }
 
-            timeoutIfLRIsNotDetected()
+//            timeoutIfLRIsNotDetected()
+
+//            Get the latest UDP Message, times out if exceeds 5000ms.
             udpDetectCoroutine.launch {
-                udpMessageListener()
-//                while (lr125DataStorage.isEmpty()) {
-//                    if (lr125DataStorage.isNotEmpty()) break
-//                }
+                UDPLock.withLock {
+                    udpMessageListener()
+                }
             }
 
             if (noDetectedLROnNetwork) {
                 isConnectedToLR = false
                 usingMDNSLookup = true
+
                 lrDetectCoroutine.launch {
-                    NSDManager.discoverServices(
-                        "_http._tcp",
-                        NsdManager.PROTOCOL_DNS_SD,
-                        NSDListener
-                    )
+                    if(!NSDLock) {
+                        println("NSDLock");
+                        NSDManager.discoverServices(
+                            "_http._tcp",
+                            NsdManager.PROTOCOL_DNS_SD,
+                            NSDListener
+                        )
+                    }
                 }
             }
 
             Handler().postDelayed({
+                dialogNetworkScanInProgress?.cancel()
                 if (lr125DataStorage.isEmpty() && (NSDListener.serviceList.size == 0)) {
                     showDialogLRNotFound()
                 } else {
                     isConnectedToLR = true
                     setIPAddressToLR125(route)
                 }
-            }, 3000)
+            }, UDPtimeout.toLong())
         }
     }
 
@@ -392,8 +414,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun timeoutIfLRIsNotDetected(): Unit {
-        val backgroundExecutor: ScheduledExecutorService =
-            Executors.newSingleThreadScheduledExecutor()
+        val backgroundExecutor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
         backgroundExecutor.schedule({
             if ((dialogNetworkScanInProgress?.isShowing == true) && (ipAddress == "")) {
@@ -402,7 +423,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 dialogNetworkScanInProgress!!.cancel()
             }
-        }, 5, TimeUnit.SECONDS)
+        }, (UDPtimeout/1000).toLong(), TimeUnit.SECONDS)
     }
 
     private fun setIPAddressToLR125(route: String = "")
@@ -424,7 +445,7 @@ class MainActivity : AppCompatActivity() {
             dialogNetworkScanInProgress?.cancel()
             callScanNetworkOnDialogClose = false
             for (entry in lr125DataStorage) {
-                if (compareTimeStamps(entry.value!!.first, currentTime)) {
+                if (compareTimeStamps(entry?.value!!.first, currentTime)) {
                     if (ipAddressIsValid(entry.key.toString())) {
                         if (isValidSilverLeafDevice(entry.value!!.second)) {
                             ipAddress = entry.key.toString()
@@ -484,34 +505,37 @@ class MainActivity : AppCompatActivity() {
         return returnString
     }
 
-    private fun udpMessageListener(): Boolean {
+    private fun udpMessageListener(): Unit {
 
-        udpListenerSocket.soTimeout = 7000
+        udpListenerSocket.soTimeout = UDPtimeout
         try {
+            noDetectedLROnNetwork = true;
+
             val buffer = ByteArray(4096)
             val timestamp = System.currentTimeMillis() / 1000
-            val udpPacket = DatagramPacket(buffer, buffer.size)
+
+            val udpPacket = DatagramPacket(
+                buffer,
+                buffer.size
+            )
 
             udpListenerSocket.receive(udpPacket)
 
             var incomingAddress = udpPacket.address
             var incomingMessage = convertByteArray(udpPacket.data)
-            var timestampedPacket = Pair(first = timestamp, second = incomingMessage)
 
+            var timestampedPacket = Pair(first = timestamp, second = incomingMessage)
 
             if (incomingAddress != null) {
                 lr125DataStorage.put(incomingAddress, timestampedPacket)
-                return true
+                noDetectedLROnNetwork = false
             } else {
                 udpMessageListener()
             }
-
-        } catch (e: Exception) {
-            noDetectedLROnNetwork = true
+        } catch (e: SocketTimeoutException) {
             e.printStackTrace()
-            return false
+            udpDetectCoroutine.cancel()
         }
-        return false
     }
 
     /*******************************************************/
@@ -549,15 +573,6 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 */
-    fun isInternetAvailable(): Boolean {
-        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-        return wifiManager.isWifiEnabled
-    }
-
-    /***
-     * TODO: Make sure R.string.url_cloud is correct
-     * R.string.url_cloud might be set to test site. // currently correct.
-     */
 
     private fun currentRozieAddress(): String{
         when(preferences.retrieveString("RozieVersion").toString()){
@@ -566,7 +581,12 @@ class MainActivity : AppCompatActivity() {
             "Rozie Core Services" -> return "roziecoreservices.com"
             "None" -> return "None"
         }
-        return "Error"
+        return ""
+    }
+
+    fun isInternetAvailable(): Boolean {
+        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        return wifiManager.isWifiEnabled
     }
 
     public fun accessKeyHasTimedOut(): Boolean{
@@ -574,6 +594,11 @@ class MainActivity : AppCompatActivity() {
             "TokenStartTime"
         ) + (preferences.retrieveInt("AccessTimeout") * 1000))
     }
+
+    /***
+     * TODO: Make sure R.string.url_cloud is correct
+     * R.string.url_cloud might be set to test site. // currently correct.
+     */
 
     public fun navigateToCloud()
     {
@@ -662,41 +687,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-private fun refreshPage() {
-  webView.post(Runnable {
-      webView.reload()
-  })
-}
-
-    private fun navigateToSettingsPage() {
-
-        val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
-        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
-
-        val dialogSettingsMenu = DialogSystemControlSettings(this, webView)
-
-        if(!dialogSettingsMenu.isShowing){
-            dialogSettingsMenu.show()
-            dialogSettingsMenu.window?.setLayout(widthDialog, heightDialog)
-        }
-
-        dialogSettingsMenu.setOnCancelListener {
-/*
-            if(getUserInformationOnClose)
-            {
-                navigateToCloud()
-                getUserInformationOnClose = false
-            }
-            */
-        }
-
+    private fun refreshPage() {
+      webView.post(Runnable {
+          webView.reload()
+      })
     }
 
-private fun showDialogNoInternet() {
-  val dialogNoInternet = DialogNoInternet(this)
-  dialogNoInternet.show()
-  dialogNoInternet.window?.setLayout(dialogSide, dialogSide)
-}
+        private fun navigateToSettingsPage() {
+
+            val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
+            val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
+
+            val dialogSettingsMenu = DialogSystemControlSettings(this, webView)
+
+            if(!dialogSettingsMenu.isShowing){
+                dialogSettingsMenu.show()
+                dialogSettingsMenu.window?.setLayout(widthDialog, heightDialog)
+            }
+
+            dialogSettingsMenu.setOnCancelListener {
+    /*
+                if(getUserInformationOnClose)
+                {
+                    navigateToCloud()
+                    getUserInformationOnClose = false
+                }
+                */
+            }
+
+        }
+
+    private fun showDialogNoInternet() {
+      val dialogNoInternet = DialogNoInternet(this)
+      dialogNoInternet.show()
+      dialogNoInternet.window?.setLayout(dialogSide, dialogSide)
+    }
 
     private fun showDialogModelAndYear() {
         val dialogInitialModelAndYear = DialogModelAndYear(this)
@@ -704,256 +729,259 @@ private fun showDialogNoInternet() {
         dialogInitialModelAndYear.window?.setLayout(dialogSide, dialogSide)
     }
 
-public fun showDialogUserInformation() {
-  val dialogUserInformation = DialogUserInformation(this, webView)
-  dialogUserInformation.show()
-  dialogUserInformation.window?.setLayout(dialogSide, dialogSide)
-}
+    public fun showDialogUserInformation() {
+      val dialogUserInformation = DialogUserInformation(this, webView)
+      dialogUserInformation.show()
+      dialogUserInformation.window?.setLayout(dialogSide, dialogSide)
+    }
 
-private fun showDialogNoCloudService() {
-  val dialogNoCloudService = DialogNoCloudService(this)
-  dialogNoCloudService.show()
-  dialogNoCloudService.window?.setLayout(dialogSide, dialogSide)
-}
+    private fun showDialogNoCloudService() {
+      val dialogNoCloudService = DialogNoCloudService(this)
+      dialogNoCloudService.show()
+      dialogNoCloudService.window?.setLayout(dialogSide, dialogSide)
+    }
 
-private fun showDialogAppUsesLocationData() {
-  val dialogUsesLocation = DialogAppUsesLocation(this, webView)
-  dialogUsesLocation.show()
-  dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)
+    private fun showDialogAppUsesLocationData() {
+      val dialogUsesLocation = DialogAppUsesLocation(this, webView)
+      dialogUsesLocation.show()
+      dialogUsesLocation.window?.setLayout(dialogSide, dialogSide)
 
-  dialogUsesLocation.setOnCancelListener{
-      requestLocationPermission()
-  }
-
-}
-
-private fun showDialogEnterIPAddress() {
-  if(!wifiIsEnabled())
-      showDialogWifiNotEnabled()
-  else {
-      val dialogEnterIPAddress = DialogEnterIPAddress(this, webView)
-      dialogEnterIPAddress.show()
-      dialogEnterIPAddress.window?.setLayout(dialogSide, dialogSide)
-  }
-}
-
-private fun showDialogCloudOptions() {
-  if(!wifiIsEnabled())
-      showDialogWifiNotEnabled()
-  else {
-      val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
-      dialogCloudOptions.show()
-      dialogCloudOptions.window?.setLayout(dialogSide, dialogSide)
-  }
-}
-
-private fun showDialogWifiNotEnabled() {
-  val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
-  val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 7 / 10
-
-  dialogWifiNotEnabled = DialogWifiNotEnabled(this, webView)
-  dialogWifiNotEnabled?.show()
-  dialogWifiNotEnabled?.window?.setLayout(widthDialog, heightDialog)
-
-  dialogWifiNotEnabled?.setOnCancelListener {
-      if(callScanNetworkOnDialogClose) {
-          scanNetwork()
+      dialogUsesLocation.setOnCancelListener{
+          requestLocationPermission()
       }
-  }
-}
 
-private fun showDialogLRNotFound() {
-  callScanNetworkOnDialogClose = true
- dialogLRNotFound = DialogLRNotFound(this, webView)
-  dialogLRNotFound?.show()
-  dialogLRNotFound?.window?.setLayout(dialogSide, dialogSide)
-  dialogLRNotFound?.setOnCancelListener {
-      if(callScanNetworkOnDialogClose) {
-          scanNetwork()
+    }
+
+    private fun showDialogEnterIPAddress() {
+        if(!wifiIsEnabled())
+            showDialogWifiNotEnabled()
+        else {
+            val dialogEnterIPAddress = DialogEnterIPAddress(this, webView)
+            dialogEnterIPAddress.show()
+            dialogEnterIPAddress.window?.setLayout(dialogSide, dialogSide)
+        }
+    }
+
+    private fun showDialogCloudOptions() {
+      if(!wifiIsEnabled())
+          showDialogWifiNotEnabled()
+      else {
+          val dialogCloudOptions = DialogCloudOptions(this, ipAddress)
+          dialogCloudOptions.show()
+          dialogCloudOptions.window?.setLayout(dialogSide, dialogSide)
       }
-      if(goToCloud){
-          if (dialogLRNotFound?.isShowing == true) {
-              dialogLRNotFound?.dismiss()
+    }
+
+    private fun showDialogWifiNotEnabled() {
+        val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
+        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 7 / 10
+
+        dialogWifiNotEnabled = DialogWifiNotEnabled(this, webView)
+        dialogWifiNotEnabled?.show()
+        dialogWifiNotEnabled?.window?.setLayout(widthDialog, heightDialog)
+
+        dialogWifiNotEnabled?.setOnCancelListener {
+          if(callScanNetworkOnDialogClose) {
+              scanNetwork()
           }
-          if (dialogNetworkScanInProgress?.isShowing == true) {
-              dialogNetworkScanInProgress?.dismiss()
+        }
+    }
+
+    private fun showDialogLRNotFound() {
+        callScanNetworkOnDialogClose = true
+
+        if (dialogNetworkScanInProgress?.isShowing == true) {
+            dialogNetworkScanInProgress?.dismiss()
+        }
+
+        dialogLRNotFound = DialogLRNotFound(this, webView)
+        dialogLRNotFound?.show()
+        dialogLRNotFound?.window?.setLayout(dialogSide, dialogSide)
+
+        dialogLRNotFound?.setOnCancelListener {
+            if(callScanNetworkOnDialogClose) {
+                scanNetwork()
+            }
+            if(goToCloud){
+                if (dialogLRNotFound?.isShowing == true) {
+                    dialogLRNotFound?.dismiss()
+                }
+            }
+        }
+    }
+
+    private fun showDialogConnectToCloud() {
+          dialogConnectToCloud = DialogConnectToCloud(this, webView)
+          dialogConnectToCloud?.show()
+          dialogConnectToCloud?.window?.setLayout(dialogSide, dialogSide)
+    }
+
+    private fun wifiIsEnabled() : Boolean {
+      val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+      return wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED
+    }
+
+    private fun clearBrowserCache() {
+      webView.clearHistory()
+      webView.clearFormData()
+      webView.clearCache(true)
+    }
+
+    fun appendToIPAddress(route: String) {
+      if(ipAddress != null) {
+          if (wifiIsEnabled()) {
+              if (ipAddressIsValid(ipAddress)) {
+                  loadURL("$ipAddress/$route")
+                  println("Full Route: $ipAddress/$route")
+                  return
+              }
+              scanNetwork(route)
+          } else {
+              showDialogWifiNotEnabled()
           }
-      }
-  }
-}
-
-private fun showDialogConnectToCloud() {
-      dialogConnectToCloud = DialogConnectToCloud(this, webView)
-      dialogConnectToCloud?.show()
-      dialogConnectToCloud?.window?.setLayout(dialogSide, dialogSide)
-}
-
-private fun wifiIsEnabled() : Boolean {
-  val wifiManager = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-  return wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED
-}
-
-private fun clearBrowserCache() {
-  webView.clearHistory()
-  webView.clearFormData()
-  webView.clearCache(true)
-}
-
-fun appendToIPAddress(route: String) {
-  if(ipAddress != null) {
-      if (wifiIsEnabled()) {
-          if (ipAddressIsValid(ipAddress)) {
+      }else return
+    }
+    private fun returnToHomeScreen(route: String) {
+      if((ipAddress != null) && (wifiIsEnabled()))
+      {
+          if(ipAddressIsValid(ipAddress))
+          {
               loadURL("$ipAddress/$route")
-              println("Full Route: $ipAddress/$route")
               return
           }
-          scanNetwork(route)
-      } else {
-          showDialogWifiNotEnabled()
-      }
-  }else return
-}
-private fun returnToHomeScreen(route: String) {
-  if((ipAddress != null) && (wifiIsEnabled()))
-  {
-      if(ipAddressIsValid(ipAddress))
-      {
-          loadURL("$ipAddress/$route")
-          return
-      }
-  }else return
-}
+      }else return
+    }
 
-private fun ipAddressIsValid(ipToValidate: String): Boolean {
-  val ip = ipToValidate.replace("/", "")
-  val ipParts = ip.split('.')
-  if(ipParts.size != 4)
-      return false
-
-  for(i in ipParts.indices) {
-      if(ipParts[i].toInt() > 255 || ipParts[i].toInt() < 0)
+    private fun ipAddressIsValid(ipToValidate: String): Boolean {
+      val ip = ipToValidate.replace("/", "")
+      val ipParts = ip.split('.')
+      if(ipParts.size != 4)
           return false
-  }
-  return true
-}
 
-public fun setNetworkChangeCallBack() {
-  val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      val link: LinkProperties? =
-          connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
+      for(i in ipParts.indices) {
+          if(ipParts[i].toInt() > 255 || ipParts[i].toInt() < 0)
+              return false
+      }
+      return true
+    }
 
+    public fun setNetworkChangeCallBack() {
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          val link: LinkProperties? = connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
 
-      link ?: run {
-          if (dialogWifiNotEnabled?.isShowing ?: false) {
-              dialogWifiNotEnabled?.dismiss()
+            link ?: run {
+                if (dialogWifiNotEnabled?.isShowing ?: false) {
+                    dialogWifiNotEnabled?.dismiss()
+                }
+
+                showDialogWifiNotEnabled()
+            }
+        }
+
+        connectivityManager.let {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+              it.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+                  override fun onAvailable(network: Network) {
+                      Log.d("NETWORK", "Network has become available")
+                      super.onAvailable(network)
+                  }
+
+                  override fun onLost(network: Network) {
+                      Log.d("NETWORK", "Network has been lost")
+                      val link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
+
+                      link ?: run {
+                          if (dialogNetworkScanInProgress?.isShowing == true) {
+                              dialogNetworkScanInProgress?.dismiss()
+                          }
+                          if (dialogConnectToCloud?.isShowing == true) {
+                              dialogConnectToCloud?.dismiss()
+                          }
+                          if (dialogLRNotFound?.isShowing == true) {
+                              dialogLRNotFound?.dismiss()
+                          }
+                          if (dialogWifiNotEnabled?.isShowing != true) {
+                              showDialogWifiNotEnabled()
+                          }
+                      }
+                      super.onLost(network)
+                  }
+
+                  override fun onCapabilitiesChanged(
+                      network: Network,
+                      networkCapabilities: NetworkCapabilities
+                  ) {
+                      if (lastNetwork == network) {
+                          Log.d("NETWORK", "Network is equal!!!")
+                          return
+                      } else {
+                          Log.d("NETWORK", "NETWORK IS NOT EQUAL")
+                      }
+
+                      if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                          if (dialogNetworkScanInProgress?.isShowing ?: false) {
+                              dialogNetworkScanInProgress?.dismiss()
+                          }
+                          if(dialogWifiNotEnabled?.isShowing ?: false) {
+                              dialogWifiNotEnabled?.dismiss()
+                          }
+                          if (dialogLRNotFound?.isShowing ?: false) {
+                              dialogLRNotFound?.dismiss()
+                          }
+                          lastNetwork = if (dialogConnectToCloud?.isShowing ?: false) {
+                              network
+                          } else {
+                              showDialogConnectToCloud()
+                              network
+                          }
+                          internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
+                          Log.d("Avail 1", internetAvailable.toString())
+                      } else {
+                          if (dialogConnectToCloud?.isShowing ?: false) {
+                              dialogConnectToCloud?.dismiss()
+                          }
+                          if(dialogWifiNotEnabled?.isShowing ?: false) {
+                              dialogWifiNotEnabled?.dismiss()
+                          }
+                          if (dialogLRNotFound?.isShowing ?: false) {
+                              dialogLRNotFound?.dismiss()
+                          }
+                          lastNetwork = if (dialogNetworkScanInProgress?.isShowing ?: false) {
+                              network
+                          } else {
+                              scanNetwork()
+                              network
+                          }
+                          internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
+                          Log.d("Avail 2", internetAvailable.toString())
+                      }
+                      super.onCapabilitiesChanged(network, networkCapabilities)
+                  }
+              })
           }
+        }
+    }
 
-          showDialogWifiNotEnabled()
-      }
-  }
-  connectivityManager.let {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          it.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
-              override fun onAvailable(network: Network) {
-                  Log.d("NETWORK", "Network has become available")
-                  super.onAvailable(network)
-              }
-              override fun onLost(network: Network) {
-                  Log.d("NETWORK", "Network has been lost")
-                  val link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
+    private fun ipToString(i: Int): String {
+      return (i and 0xFF).toString() + "." +
+              (i shr 8 and 0xFF) + "." +
+              (i shr 16 and 0xFF) + "." +
+              (i shr 24 and 0xFF)
 
-                  link ?: run {
-                      if (dialogNetworkScanInProgress?.isShowing == true) {
-                          dialogNetworkScanInProgress?.dismiss()
-                      }
-                      if (dialogConnectToCloud?.isShowing == true) {
-                          dialogConnectToCloud?.dismiss()
-                      }
-                      if (dialogLRNotFound?.isShowing == true) {
-                          dialogLRNotFound?.dismiss()
-                      }
-                      if (dialogWifiNotEnabled?.isShowing != true) {
-                          showDialogWifiNotEnabled()
-                      }
-                  }
-                  super.onLost(network)
-              }
+    }
+    private fun bindUI() {
+      webView = findViewById(R.id.webView)
+      progressBar = findViewById(R.id.progressBarWebView)
+      progressBar.visibility = View.VISIBLE
+      setWebView(webView, progressBar, this)
 
-              override fun onCapabilitiesChanged(
-                  network: Network,
-                  networkCapabilities: NetworkCapabilities
-              ) {
-                  if (lastNetwork == network) {
-                      Log.d("NETWORK", "Network is equal!!!")
-                      return
-                  } else {
-                      Log.d("NETWORK", "NETWORK IS NOT EQUAL")
-                  }
-
-                  if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                      if (dialogNetworkScanInProgress?.isShowing ?: false) {
-                          dialogNetworkScanInProgress?.dismiss()
-                      }
-                      if(dialogWifiNotEnabled?.isShowing ?: false) {
-                          dialogWifiNotEnabled?.dismiss()
-                      }
-                      if (dialogLRNotFound?.isShowing ?: false) {
-                          dialogLRNotFound?.dismiss()
-                      }
-                      lastNetwork = if (dialogConnectToCloud?.isShowing ?: false) {
-                          network
-                      } else {
-                          showDialogConnectToCloud()
-                          network
-                      }
-                      internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
-                      Log.d("Avail 1", internetAvailable.toString())
-                  } else {
-                      if (dialogConnectToCloud?.isShowing ?: false) {
-                          dialogConnectToCloud?.dismiss()
-                      }
-                      if(dialogWifiNotEnabled?.isShowing ?: false) {
-                          dialogWifiNotEnabled?.dismiss()
-                      }
-                      if (dialogLRNotFound?.isShowing ?: false) {
-                          dialogLRNotFound?.dismiss()
-                      }
-                      lastNetwork = if (dialogNetworkScanInProgress?.isShowing ?: false) {
-                          network
-                      } else {
-                          scanNetwork()
-                          network
-                      }
-                      internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
-                      Log.d("Avail 2", internetAvailable.toString())
-                  }
-                  super.onCapabilitiesChanged(network, networkCapabilities)
-              }
-          })
-      }
-  }
-}
-
-private fun ipToString(i: Int): String {
-  return (i and 0xFF).toString() + "." +
-          (i shr 8 and 0xFF) + "." +
-          (i shr 16 and 0xFF) + "." +
-          (i shr 24 and 0xFF)
-
-}
-private fun bindUI() {
-  webView = findViewById(R.id.webView)
-  progressBar = findViewById(R.id.progressBarWebView)
-  progressBar.visibility = View.VISIBLE
-  setWebView(webView, progressBar, this)
-
-  supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
-  supportActionBar?.setDisplayShowCustomEnabled(true)
-  supportActionBar?.setCustomView(R.layout.action_bar)
-  val background : Drawable = resources.getDrawable(R.drawable.action_bar_border)
-  supportActionBar?.setBackgroundDrawable(background)
-}
+      supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
+      supportActionBar?.setDisplayShowCustomEnabled(true)
+      supportActionBar?.setCustomView(R.layout.action_bar)
+      val background : Drawable = resources.getDrawable(R.drawable.action_bar_border)
+      supportActionBar?.setBackgroundDrawable(background)
+    }
 
 
 }

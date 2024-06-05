@@ -21,7 +21,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.screenAlwaysOn
-import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.usersVariantOfRozie
 import kotlinx.coroutines.*
 import okhttp3.internal.http.HTTP_GONE
 import org.json.JSONArray
@@ -195,12 +194,14 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                             emailCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areEmailNotificationsActive")
                             MainActivity.email_id = j.get("id").toString()
                         }else MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
+
                         if(j.get("notification_type") == "sms"){
                             MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
                             println("${MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")}")
                             smsCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")
                             MainActivity.sms_id = j.get("id").toString()
                         }else MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+
                         if(j.get("notification_type") == "push"){
                             MainActivity.preferences.saveBoolean("arePushNotificationsActive", true)
                             MainActivity.push_id = j.get("id").toString()
@@ -222,14 +223,14 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             .build()
 
         CoroutineScope(Dispatchers.IO).launch {
-                MainActivity.client.newCall(getNotificationRequest).execute().use { response ->
-                    if(!response.isSuccessful){
-                        println("Response Unsuccessful: Code ${response.code}")
-                        println("Response from Server: ${response.body.string()}")
-                    }
-                    else extractNotificationType(JSONObject(response.body.string()).optJSONArray("data"))
-
+            MainActivity.client.newCall(getNotificationRequest).execute().use { response ->
+                if(!response.isSuccessful){
+                    println("Response Unsuccessful: Code ${response.code}")
+                    println("Response from Server: ${response.body.string()}")
                 }
+                else extractNotificationType(JSONObject(response.body.string()).optJSONArray("data"))
+
+            }
         }
     }
 
@@ -399,6 +400,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long){
                     MainActivity.preferences.saveString("RozieVersion", rozieVersion[position])
+
                     if(rozieVersion[position] == "None"){
                         MainActivity.cloudServiceStatus = false
                         webView.clearCache(true)
