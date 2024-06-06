@@ -35,11 +35,6 @@ class DialogNoInternet(activity: Activity): Dialog(activity) {
 
     private fun bindUI() {
 
-        buttonDialogDismiss = findViewById(R.id.buttonDialogCancel)
-        buttonDialogDismiss.setOnClickListener {
-            this.cancel()
-        }
-
     }
 }
 class DialogIncorrectCredentials(activity: Activity): Dialog(activity){
@@ -86,7 +81,6 @@ class DialogNoCloudService(activity: Activity): Dialog(activity){
     }
 
     private fun bindUI() {
-
         buttonDialogDismiss = findViewById(R.id.buttonDialogNoCloudService)
         buttonDialogDismiss.setOnClickListener {
             this.cancel()

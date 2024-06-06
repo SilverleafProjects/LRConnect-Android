@@ -20,7 +20,6 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
     private lateinit var textViewDialogWifiNotConnectedMessage: TextView
     private lateinit var textViewDialogWifiNotConnectedError: TextView
 
-    private var shouldCheckForWifi: Boolean = true
     private var webView: WebView
     private var activity: Activity
 
@@ -38,31 +37,27 @@ class DialogWifiNotEnabled(activity: Activity, webView: WebView): Dialog(activit
 
         bindUI()
 
-        CoroutineScope(Dispatchers.Default).launch {
-            checkForWifiConnection()
-        }
+//        CoroutineScope(Dispatchers.Default).launch {
+//            checkForWifiConnection()
+//        }
     }
 
-    private suspend fun checkForWifiConnection() {
-        val wifiManager = (context.getSystemService(Context.WIFI_SERVICE) as WifiManager)
-        while(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED &&  shouldCheckForWifi) {
-            delay(1000)
-            println("Call from dialog loop.")
-        }
-        delay(1500)
-        MainActivity.callScanNetworkOnDialogClose = true
-        this.cancel()
-    }
+//    private suspend fun checkForWifiConnection() {
+//        val wifiManager = (context.getSystemService(Context.WIFI_SERVICE) as WifiManager)
+//        while(wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED &&  shouldCheckForWifi) {
+//            delay(1000)
+//            println("Call from dialog loop.")
+//        }
+//        delay(1500)
+//        MainActivity.callScanNetworkOnDialogClose = true
+//        this.cancel()
+//    }
 
     private fun bindUI() {
-       /* buttonDialogWifiNotConnectedGoToCloudSite = findViewById(R.id.buttonDialogWifiNotConnectedGoToCloudSite)
-        buttonDialogWifiNotConnectedGoToCloudSite.setOnClickListener {
-            webView.post(Runnable {
-                webView.loadUrl(activity.resources.getString(R.string.url_cloud))
-            })
-            shouldCheckForWifi = false
+        findViewById<Button>(R.id.NoWIFICloudBtn).setOnClickListener{
             this.cancel()
-        }*/
+        }
+
 
         textViewDialogWifiNotConnectedMessage = findViewById(R.id.textViewDialogWifiNotConnectedMessage)
         textViewDialogWifiNotConnectedMessage.text = activity.resources.getString(R.string.text_view_dialog_wifi_not_connected_message)

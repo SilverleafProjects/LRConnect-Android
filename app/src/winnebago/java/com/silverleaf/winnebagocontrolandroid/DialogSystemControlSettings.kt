@@ -485,6 +485,8 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 //            }
         }
 
+//    MainActivity.UDPtimeout
+
         smsCheckBox.setOnClickListener{
             CoroutineScope(Dispatchers.IO).launch {
                 if (smsCheckBox.isChecked) {

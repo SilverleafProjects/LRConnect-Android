@@ -55,10 +55,9 @@ import java.util.concurrent.TimeUnit
 /* CURRENT VERSION:  8: 1.06 */
 
 class ScreenStatusViewModel : ViewModel() {
-
-        val currentStatus: MutableLiveData<Boolean> by lazy {
-            MutableLiveData<Boolean>()
-        }
+    val currentStatus: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>()
+    }
 }
 
 class MainActivity : AppCompatActivity() {
@@ -72,6 +71,7 @@ class MainActivity : AppCompatActivity() {
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
     private var dialogConnectToCloud: DialogConnectToCloud? = null
     private var dialogWifiNotEnabled: DialogWifiNotEnabled? = null
+    private var dialogNoInternet: DialogNoInternet? = null
     private var dialogUserInformation: DialogUserInformation? = null
     private var dialogLRNotFound: DialogLRNotFound? = null
     private var lastNetwork: Network? = null
@@ -274,6 +274,12 @@ class MainActivity : AppCompatActivity() {
         isConnectedToLR = false
         isConnectedToCloud = false
         usingMDNSLookup = false
+
+        if(!isInternetAvailable()){
+            showDialogWifiNotEnabled()
+
+            return;
+        }
 
         if((preferences.retrieveString("httpLoginSetting") == "Auto Cloud Login On") && (preferences.retrieveBoolean("cloudServiceStatus"))){
             if((preferences.retrieveString("AccessToken") != null) && (hasAccessTokenTimedOut(System.currentTimeMillis(), tokenValidStartTime))) {
@@ -524,8 +530,8 @@ fun isInternetAvailable(context: Context): Boolean {
 
     public fun navigateToCloud()
     {
-        if(cloudServiceStatus || (preferences.retrieveString("RozieVersion") != "None")){
-
+        var curVersion = preferences.retrieveString("RozieVersion");
+        if(curVersion != null && curVersion != "None"){
             if(preferences.retrieveString("RozieVersion") != "Rozie 2")
             {
                 var curURL = currentRozieAddress();
@@ -661,6 +667,15 @@ fun isInternetAvailable(context: Context): Boolean {
         }
     }
 
+    private fun showDialogNoInternet(){
+        val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
+        val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 7 / 10
+
+        dialogNoInternet = DialogNoInternet(this)
+        dialogNoInternet?.show()
+        dialogNoInternet?.window?.setLayout(widthDialog, heightDialog)
+    }
+
     private fun showDialogWifiNotEnabled() {
         val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
         val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 7 / 10
@@ -670,9 +685,10 @@ fun isInternetAvailable(context: Context): Boolean {
         dialogWifiNotEnabled?.window?.setLayout(widthDialog, heightDialog)
 
         dialogWifiNotEnabled?.setOnCancelListener {
-            if(callScanNetworkOnDialogClose) {
-                scanNetwork()
-            }
+//            if(callScanNetworkOnDialogClose) {
+//                scanNetwork()
+//            }
+            navigateToCloud()
         }
     }
 
@@ -781,7 +797,7 @@ fun isInternetAvailable(context: Context): Boolean {
                     dialogWifiNotEnabled?.dismiss()
                 }
 
-                showDialogWifiNotEnabled()
+                showDialogNoInternet()
             }
         }
         connectivityManager.let {
@@ -792,31 +808,26 @@ fun isInternetAvailable(context: Context): Boolean {
                         super.onAvailable(network)
                     }
 
-                    override fun onLost(network: Network) {
-                        Log.d("NETWORK", "Network has been lost")
-                        val link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
-
-                        //Log.d("IP ADDRESS? TP1", link?.linkAddresses.toString())
-                        //Log.d("Network Name Tp2?", link?.interfaceName.toString())
-                        link ?: run {
-                            if (dialogNetworkScanInProgress?.isShowing == true) {
-                                dialogNetworkScanInProgress?.dismiss()
-                            }
-                            if (dialogConnectToCloud?.isShowing == true) {
-                                dialogConnectToCloud?.dismiss()
-                            }
-                            if (dialogLRNotFound?.isShowing == true) {
-                                dialogLRNotFound?.dismiss()
-                            }
-
-                            if (dialogWifiNotEnabled?.isShowing == true) {
-                                Log.d("Dialog", "Wifi Not enabled is showing")
-                            } else {
-                                showDialogWifiNotEnabled()
-                            }
-                        }
-                        super.onLost(network)
-                    }
+//                    override fun onLost(network: Network) {
+//                        Log.d("NETWORK", "Network has been lost")
+//                        val link: LinkProperties? =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
+//
+//                        link ?: run {
+//                            if (dialogNetworkScanInProgress?.isShowing == true) {
+//                                dialogNetworkScanInProgress?.dismiss()
+//                            }
+//                            if (dialogConnectToCloud?.isShowing == true) {
+//                                dialogConnectToCloud?.dismiss()
+//                            }
+//                            if (dialogLRNotFound?.isShowing == true) {
+//                                dialogLRNotFound?.dismiss()
+//                            }
+//                            if (dialogWifiNotEnabled?.isShowing != true) {
+//                                showDialogWifiNotEnabled()
+//                            }
+//                        }
+//                        super.onLost(network)
+//                    }
 
                     override fun onCapabilitiesChanged(
                         network: Network,
@@ -829,51 +840,38 @@ fun isInternetAvailable(context: Context): Boolean {
                             Log.d("NETWORK", "NETWORK IS NOT EQUAL")
                         }
 
+                        if(dialogWifiNotEnabled?.isShowing ?: false) {
+                            dialogWifiNotEnabled?.dismiss()
+                        }
+
+                        if (dialogLRNotFound?.isShowing ?: false) {
+                            dialogLRNotFound?.dismiss()
+                        }
+
+                        if (dialogNoInternet?.isShowing ?: false) {
+                            dialogConnectToCloud?.dismiss()
+                        }
+
                         if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                             if (dialogNetworkScanInProgress?.isShowing ?: false) {
                                 dialogNetworkScanInProgress?.dismiss()
                             }
-                            if(dialogWifiNotEnabled?.isShowing ?: false) {
-                                dialogWifiNotEnabled?.dismiss()
-                            }
-                            if (dialogLRNotFound?.isShowing ?: false) {
-                                dialogLRNotFound?.dismiss()
-                            }
-                            lastNetwork = if (dialogConnectToCloud?.isShowing ?: false) {
-                                network
-                            } else {
-                                showDialogConnectToCloud()
-                                network
-                            }
 
-                            webView.post(Runnable {
-                                internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
-                                Log.d("Avail 1", internetAvailable.toString())
-
-                            })
-
-                        } else {
+                            showDialogWifiNotEnabled()
+                        }
+                        else {
                             if (dialogConnectToCloud?.isShowing ?: false) {
                                 dialogConnectToCloud?.dismiss()
                             }
-                            if(dialogWifiNotEnabled?.isShowing ?: false) {
-                                dialogWifiNotEnabled?.dismiss()
-                            }
-                            if (dialogLRNotFound?.isShowing ?: false) {
-                                dialogLRNotFound?.dismiss()
-                            }
-                            lastNetwork = if (dialogNetworkScanInProgress?.isShowing ?: false) {
-                                network
-                            } else {
-                                scanNetwork()
-                                network
-                            }
 
-                            webView.post(Runnable {
-                                internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
-                                Log.d("Avail 2", internetAvailable.toString())
-                            })
+                            if (!(dialogNetworkScanInProgress?.isShowing?: false)){
+                                scanNetwork()
+                            }
                         }
+
+                        lastNetwork = network;
+
+                        internetAvailable = isInternetAvailable() //isInternetAvailable(applicationContext)
                         super.onCapabilitiesChanged(network, networkCapabilities)
                     }
                 })
