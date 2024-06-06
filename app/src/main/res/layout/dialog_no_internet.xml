@@ -9,7 +9,7 @@
         android:id="@+id/dialogTextViewIncorrectInformation"
         android:layout_width="236dp"
         android:layout_height="87dp"
-        android:text="No have no wifi, or cell data"
+        android:text="You have no wifi, or cell data"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="bold"
