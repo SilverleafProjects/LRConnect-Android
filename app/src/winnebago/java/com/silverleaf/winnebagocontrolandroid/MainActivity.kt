@@ -532,7 +532,21 @@ class MainActivity : AppCompatActivity() {
     {
         var curVersion = preferences.retrieveString("RozieVersion");
         if(curVersion != null && curVersion != "None"){
-            if(preferences.retrieveString("RozieVersion") != "Rozie 2")
+            if(curVersion == "Rozie 2"){
+                if((preferences.retrieveString("AccessToken") == null) || (accessKeyHasTimedOut())) runBlocking {showDialogUserInformation()} //if access has timed out or we have no token, prompt user information
+                else{
+                    val actoken = preferences.retrieveString("AccessToken")
+                    val idtoken = preferences.retrieveString("IDToken")
+                    val rftoken = preferences.retrieveString("RefreshToken")
+
+                    webView.post(kotlinx.coroutines.Runnable {
+                        webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
+                    })
+
+                    isConnectedToCloud = true
+                }
+            }
+            else
             {
                 var curURL = currentRozieAddress();
 
@@ -545,20 +559,6 @@ class MainActivity : AppCompatActivity() {
 
                     showDialogNoCloudService()
                     isConnectedToCloud = false
-                }
-
-
-            }else if(preferences.retrieveString("RozieVersion") == "Rozie 2"){
-
-                if((preferences.retrieveString("AccessToken") == null) || (accessKeyHasTimedOut())) runBlocking {showDialogUserInformation()} //if access has timed out or we have no token, prompt user information
-                else{
-                    val actoken = preferences.retrieveString("AccessToken")
-                    val idtoken = preferences.retrieveString("IDToken")
-                    val rftoken = preferences.retrieveString("RefreshToken")
-                    webView.post(kotlinx.coroutines.Runnable {
-                        webView.loadUrl("https://www.roziecoreservices.com/rozie2?accessToken=${actoken}&idToken=${idtoken}&refreshToken=${rftoken}")
-                    })
-                    isConnectedToCloud = true
                 }
             }
 
