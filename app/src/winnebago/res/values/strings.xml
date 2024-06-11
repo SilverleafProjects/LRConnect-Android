@@ -44,6 +44,7 @@
     <string name="button_dialog_lr_not_found_go_to_cloud">Connect to Cloud</string>
     <string name="text_view_dialog_no_internet">No Internet connection, please connect and try again.</string>
     <string name="dialog_enter_name_and_model_year">Please enter the model name and year of your coach.</string>
+    <string name="default_notification_channel_id">0</string>
     <string-array name="Versions">
         <item>2020</item>
         <item>2021</item>

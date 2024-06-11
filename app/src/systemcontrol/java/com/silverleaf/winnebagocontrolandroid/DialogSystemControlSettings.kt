@@ -14,6 +14,8 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.*
 import androidx.core.view.isVisible
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.silverleaf.lrgizmo.R.*
 import com.silverleaf.winnebagocontrolandroid.MainActivity.Companion.email_id
 import okhttp3.MediaType.Companion.toMediaType
@@ -26,6 +28,12 @@ import okhttp3.internal.http.HTTP_GONE
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.MissingFormatArgumentException
+
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.firestore
+//import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
+import com.google.firebase.messaging.remoteMessage
 
 class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(activity) {
 
@@ -165,7 +173,29 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             findViewById<TextView>(R.id.HardwareIP).setText(MainActivity.ipAddress)
         }
 
+//        val getTokenBtn = findViewById<Button>(R.id.TokenBtn)
+//        val tokenText = findViewById<TextView>(R.id.TokenTxt)
+
+//        getTokenBtn.setOnClickListener{
+////            tokenText.text = "test"
+//            logRegToken(tokenText)
+//        }
+
         bindUI()
+    }
+
+    fun logRegToken(tokenText: TextView) {
+        // [START log_reg_token]
+        Firebase.messaging.getToken().addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+
+                tokenText.text = task.exception?.stackTraceToString() ?: "Error"
+                return@addOnCompleteListener
+            }
+
+            tokenText.text = task.result
+        }
+        // [END log_reg_token]
     }
 
     private fun getIPAddress(): String {
@@ -255,13 +285,15 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
     }
 
     private fun disableNotificationType(notificationMsg: String){
-            val disableNotification = Request.Builder()
-                .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences/${notificationMsg}")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
-                .delete()
-                .build()
+        val enableNotificationJSON = JSONObject().put("notification_type", notificationMsg).toString()
+
+        val disableNotification = Request.Builder()
+            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences/${notificationMsg}")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "application/json")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .delete(enableNotificationJSON.toRequestBody("application/json; charset=utf-8".toMediaType()))
+            .build()
 
         MainActivity.client.newCall(disableNotification).execute().use { response ->
             if (!response.isSuccessful) {
@@ -287,7 +319,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             if(coachModelSpinner.getSelectedItem().toString() == "Newmar"){
 //                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){
 //                    rozieVersionSpinner.setSelection(Rozie2)
-//
+//                    activity.getFBToken()
 //                    MainActivity.preferences.saveString("RozieVersion",rozieVersion[Rozie2])
 //                }
 //                else{
@@ -297,6 +329,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             }
             else if(coachModelSpinner.getSelectedItem().toString() == "Winnebago"){
 //                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){
+//                    activity.getFBToken()
 //                    rozieVersionSpinner.setSelection(Rozie2)
 //                }
 //                else{
@@ -309,6 +342,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             else if(coachModelSpinner.getSelectedItem().toString() == "Foretravel"){
 //                if (yearSpinner.getSelectedItem().toString().toInt() >= 2026){
 //                    rozieVersionSpinner.setSelection(Rozie2)
+//                    activity.getFBToken()
 //                }
 //                else{
 //                    rozieVersionSpinner.setSelection(MyRozie)
@@ -422,6 +456,10 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                         }
 
                         CloudBtn.visibility = VISIBLE
+
+                        if(MainActivity.FBToken == "") {
+                            activity.getFBToken()
+                        }
                     }
                     else{
                         CloudBtn.visibility = GONE
@@ -523,7 +561,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                     enableNotificationType("sms")
                 } else {
                     MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
-                    disableNotificationType(MainActivity.sms_id)
+                    disableNotificationType("sms")
                 }
               //  getCurrentlyActiveNotifications()
             }
@@ -536,7 +574,7 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                     enableNotificationType("email")
                 } else {
                     MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
-                    disableNotificationType(MainActivity.email_id)
+                    disableNotificationType("email")
                 }
               //  getCurrentlyActiveNotifications()
             }

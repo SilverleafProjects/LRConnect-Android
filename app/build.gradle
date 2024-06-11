@@ -1,10 +1,11 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.gms.google-services'
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     dataBinding {
         enabled = true
@@ -12,8 +13,8 @@ android {
 
     defaultConfig {
 
-        minSdk 21
-        targetSdk 33
+        minSdk 23
+        targetSdk 34
         flavorDimensions "systemcontrol"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.debug
@@ -97,4 +98,10 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.11" //HTTP requests
     implementation "com.google.code.gson:gson:2.10.1"           //JSON parsing
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.0"
+
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-auth")
+
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-firestore")
 }

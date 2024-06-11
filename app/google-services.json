@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "70684771580",
+    "project_id": "rozie2pushnotifications",
+    "storage_bucket": "rozie2pushnotifications.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70684771580:android:197a4dbecae343f3404379",
+        "android_client_info": {
+          "package_name": "com.silverleaf.lrgizmo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBz0rfBVX1vQG2SOyA0IS4Zd8vdPZ7EYzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70684771580:android:ed58f19362399398404379",
+        "android_client_info": {
+          "package_name": "com.silverleaf.winnebagocontrolandroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBz0rfBVX1vQG2SOyA0IS4Zd8vdPZ7EYzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

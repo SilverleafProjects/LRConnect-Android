@@ -79,6 +79,7 @@
                             android:background="@drawable/rounded_shape"
                             android:text="Cloud"
                             android:textColor="@color/white" />
+
                 </LinearLayout>
         </ScrollView>
 
@@ -111,15 +112,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            tools:visibility="visible">
+                            tools:visibility="gone">
 
                                 <TextView
                                     android:id="@+id/textView7"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginLeft="5dp"
-                                    android:textSize="12dp"
-                                    android:text="Year" />
+                                    android:text="Year"
+                                    android:textSize="12dp" />
 
                                 <Spinner
                                     android:id="@+id/VersionSpinner"
@@ -137,8 +138,8 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginLeft="5dp"
-                                    android:textSize="12dp"
-                                    android:text="Model" />
+                                    android:text="Model"
+                                    android:textSize="12dp" />
 
                                 <Spinner
                                     android:id="@+id/CoachModelSpinner"
@@ -157,8 +158,8 @@
                                     android:layout_height="35dp"
                                     android:layout_margin="15dp"
                                     android:background="@drawable/rounded_shape"
-                                    android:textColor="@color/white"
-                                    android:text="Submit" />
+                                    android:text="Submit"
+                                    android:textColor="@color/white" />
 
                         </LinearLayout>
 
@@ -167,7 +168,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            tools:visibility="visible">
+                            tools:visibility="gone">
 
                                 <TextView
                                     android:id="@+id/HardwareIP"
@@ -183,7 +184,7 @@
                                     android:layout_margin="5dp"
                                     android:background="@drawable/rounded_shape"
                                     android:text="Admin"
-                                    android:textColor="@color/white"/>
+                                    android:textColor="@color/white" />
 
                                 <Button
                                     android:id="@+id/buttonConnectionSettings"
@@ -192,7 +193,7 @@
                                     android:layout_margin="5dp"
                                     android:background="@drawable/rounded_shape"
                                     android:text="Connection"
-                                    android:textColor="@color/white"/>
+                                    android:textColor="@color/white" />
 
                                 <Button
                                     android:id="@+id/buttonOemSettings"
@@ -201,7 +202,7 @@
                                     android:layout_margin="5dp"
                                     android:background="@drawable/rounded_shape"
                                     android:text="OEM"
-                                    android:textColor="@color/white"/>
+                                    android:textColor="@color/white" />
 
                                 <Button
                                     android:id="@+id/RegisterBtn"
@@ -227,7 +228,8 @@
                                     android:id="@+id/CloudTabLoggedOut"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:orientation="vertical">
+                                    android:orientation="vertical"
+                                    tools:visibility="gone">
 
                                         <Button
                                             android:id="@+id/LoginBtn"
@@ -278,6 +280,7 @@
                                             android:background="@drawable/rounded_shape"
                                             android:text="Logout"
                                             android:textColor="@color/white" />
+
                                 </LinearLayout>
 
                         </LinearLayout>
@@ -287,15 +290,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            tools:visibility="visible">
+                            tools:visibility="gone">
 
                                 <TextView
                                     android:id="@+id/textView"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginLeft="5dp"
-                                    android:textSize="12dp"
-                                    android:text="Rozie Server" />
+                                    android:text="Rozie Server"
+                                    android:textSize="12dp" />
 
                                 <Spinner
                                     android:id="@+id/RozieVersionSpinner"
@@ -314,8 +317,8 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginLeft="5dp"
-                                    android:textSize="12dp"
-                                    android:text="Display Settings" />
+                                    android:text="Display Settings"
+                                    android:textSize="12dp" />
 
                                 <Spinner
                                     android:id="@+id/DisplaysStaysOn"
@@ -333,8 +336,8 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginLeft="5dp"
-                                    android:textSize="12dp"
-                                    android:text="RozieAutoLogin" />
+                                    android:text="RozieAutoLogin"
+                                    android:textSize="12dp" />
 
                                 <Spinner
                                     android:id="@+id/HTTPAutoLoginSpinner"

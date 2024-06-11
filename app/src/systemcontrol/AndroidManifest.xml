@@ -5,6 +5,6 @@
             android:name="com.silverleaf.winnebagocontrolandroid.DialogAdvancedSettings"
             android:exported="false"
             android:hardwareAccelerated="true"
-            />
+        />
     </application>
 </manifest>

@@ -25,7 +25,7 @@ import org.json.JSONObject
 import java.io.IOException
 
 
-class DialogUserInformation(activity: Activity, webView: WebView) : Dialog(activity) {
+class DialogUserInformation(activity: MainActivity, webView: WebView) : Dialog(activity) {
     private lateinit var buttonDialogEnterInformationAccept: Button
     private lateinit var buttonDialogEnterIPAddressCancel: Button
     private lateinit var editTextDialogEnterEmail: EditText
@@ -34,13 +34,12 @@ class DialogUserInformation(activity: Activity, webView: WebView) : Dialog(activ
     private lateinit var enteredEmail: String
     private lateinit var enteredCredentials: TextView
     private var connectionFailureCount: Int = 0
-    private val broadcastMessageCoroutine = CoroutineScope(Dispatchers.IO)
     private var preferences = Preferences(activity.baseContext)
     var dialogSide: Int = 0
 
     private var webView: WebView
 
-    private var activity: Activity
+    private var activity: MainActivity
     init {
         setCancelable(false)
         activity.also { this.activity = it }
@@ -69,8 +68,10 @@ class DialogUserInformation(activity: Activity, webView: WebView) : Dialog(activ
     private fun createHTTPUserLoginMessage(email: String, password: String): String {
         var httpUserLoginMessage: JSONObject = JSONObject()
         httpUserLoginMessage.put("client_secret", "10kmr0bbckpr0c8tb7hmglmqgh270mte2b1nohk5ggi0boej94v9")
-        httpUserLoginMessage.put("email"   ,    email)
-        httpUserLoginMessage.put("password", password)
+//        httpUserLoginMessage.put("email"   ,    email)
+//        httpUserLoginMessage.put("password", password)
+        httpUserLoginMessage.put("email"   ,    "joshua@simply-smarter.com")
+        httpUserLoginMessage.put("password", "@1862Civilwar")
 
         return httpUserLoginMessage.toString()
     }
@@ -106,11 +107,10 @@ class DialogUserInformation(activity: Activity, webView: WebView) : Dialog(activ
             httpAccessToken
         }
 
-        broadcastMessageCoroutine.launch {
+        MainActivity.broadcastMessageCoroutine.launch {
             try {
                     val request = Request.Builder()
                         .url("https://identity.winegard-staging.io/api/v1/auth/login")
-                       // .url("https://identity.winegard-staging.io/api/v1/oauth2/token")
                         .header("Content-Type", "application/json")
                         .header("Authorization", httpAccessCoroutine.await())
                         .post(createHTTPUserLoginMessage(email, password).toRequestBody("application/json; charset=utf-8".toMediaType()))
@@ -134,10 +134,15 @@ class DialogUserInformation(activity: Activity, webView: WebView) : Dialog(activ
                         MainActivity.preferences.saveString("AccessToken", winegardAccessToken)
                         MainActivity.preferences.saveString("IDToken", winegardIdToken)
                         MainActivity.preferences.saveString("RefreshToken", winegardRefreshToken)
+
+                        if(MainActivity.updatedToken){
+                            connectionFailureCount = 0
+                            activity.updatePushNotifications()
+                        }
                     }
 
                 yield()
-            }catch(e: Exception){
+            } catch(e: Exception){
                 e.printStackTrace()
                 this.cancel()
                 yield()

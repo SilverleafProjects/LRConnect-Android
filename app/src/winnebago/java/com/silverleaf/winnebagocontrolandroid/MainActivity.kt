@@ -1,8 +1,10 @@
 //File used for the standard LR125 Control app.
 package com.silverleaf.winnebagocontrolandroid
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
@@ -31,17 +33,25 @@ import androidx.activity.viewModels
 import androidx.annotation.MainThread
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.FirebaseMessagingService
 import com.silverleaf.lrgizmo.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import preferences.Preferences
 import webviewsettings.setWebView
+import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -66,7 +76,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var progressBar: ProgressBar
 
     var dialogSide: Int = 0
-
     private val viewModel: ScreenStatusViewModel by viewModels()
     private var dialogNetworkScanInProgress: DialogNetworkScanInProgress? = null
     private var dialogConnectToCloud: DialogConnectToCloud? = null
@@ -118,6 +127,7 @@ class MainActivity : AppCompatActivity() {
         lateinit var NSDManager: NsdManager
         var NSDListener: DiscoveryListener = DiscoveryListener()
         val lrDetectCoroutine = CoroutineScope(Dispatchers.IO)
+        val broadcastMessageCoroutine = CoroutineScope(Dispatchers.IO)
 
         /* Declarations for HTTP requests */
         val client = OkHttpClient()
@@ -134,6 +144,10 @@ class MainActivity : AppCompatActivity() {
 
         @kotlin.jvm.JvmField
         var NSDLock: Boolean = false
+
+        var updatedToken: Boolean = false
+        var FBToken: String = ""
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,10 +155,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         NSDManager = getSystemService(Context.NSD_SERVICE) as NsdManager
-
         dialogNetworkScanInProgress = DialogNetworkScanInProgress(this)
-
         preferences = Preferences(this)
+
+        handlePermissions()
+
+        if (preferences.retrieveString("RozieVersion") == "Rozie 2") {
+            getFBToken()
+        }
 
         try {
             if (preferences.retrieveBoolean("screenAlwaysOnStatus") != null) {
@@ -175,14 +193,6 @@ class MainActivity : AppCompatActivity() {
             resources.displayMetrics.heightPixels
         ) / 10
 
-//        usersVariantOfRozie = when (preferences.retrieveString("RozieVersion")){
-//            "Rozie Core Services" -> "roziecoreservices.com"//println("Variant: Rozie Core") //Winnebago Only
-//            "Rozie 2" -> "roziecoreservices.com/rozie2"//println("Variant: Rozie 2") //Scott's APE
-//            "MyRozie" -> "myrozie.com/"
-//            "None" -> ""
-//            else -> "myrozie.com/"
-//        }
-
         bindUI()
 
         if(!preferences.retrieveBoolean("HasUserSelectedCoachModel")) {
@@ -210,6 +220,78 @@ class MainActivity : AppCompatActivity() {
             if(rftoken != null) {
                 winegardRefreshToken = rftoken
             }
+        }
+    }
+
+    private fun createHttpUpdatePush() : String {
+        var msg: JSONObject = JSONObject()
+        msg.put("PushToken", FBToken)
+
+        return msg.toString()
+    }
+
+    public fun updatePushNotifications(){
+
+        MainActivity.broadcastMessageCoroutine.launch {
+            try {
+                val request = Request.Builder()
+                    .url("https://0ehkztwewg.execute-api.us-west-2.amazonaws.com/Alpha/PushNotifications/createEndpoint")
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + winegardIdToken)
+                    .post(
+                        createHttpUpdatePush().toRequestBody("application/json; charset=utf-8".toMediaType())
+                    )
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw IOException("Response Unsuccessful!")
+                    } else {
+//                    val fullResponseString = response.body.string()
+//                    println(fullResponseString)
+
+                        preferences.saveString(FBToken, "FBToken")
+                        updatedToken = false
+                    }
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    public fun getFBToken(){
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                println("Failed to get token")
+                return@addOnCompleteListener
+            }
+
+            FBToken = task.result
+
+            if(preferences.retrieveString("FBToken") != FBToken){
+                updatedToken = true
+                println(FBToken)
+            }
+
+            if(updatedToken) {
+                if ((preferences.retrieveString("AccessToken") == null) || accessKeyHasTimedOut()) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Login to Rozie2 to update notification token.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    updatePushNotifications()
+                }
+            }
+        }
+    }
+
+    private fun handlePermissions(){
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0);
         }
     }
 
