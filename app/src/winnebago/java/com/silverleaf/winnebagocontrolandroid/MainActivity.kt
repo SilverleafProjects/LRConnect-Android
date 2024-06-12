@@ -61,7 +61,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-
 /* CURRENT VERSION:  8: 1.06 */
 
 class ScreenStatusViewModel : ViewModel() {
@@ -250,7 +249,7 @@ class MainActivity : AppCompatActivity() {
 //                    val fullResponseString = response.body.string()
 //                    println(fullResponseString)
 
-                        preferences.saveString(FBToken, "FBToken")
+                        preferences.saveString("FBToken", FBToken)
                         updatedToken = false
                     }
                 }
@@ -270,13 +269,16 @@ class MainActivity : AppCompatActivity() {
 
             FBToken = task.result
 
+            updatedToken = false
+
             if(preferences.retrieveString("FBToken") != FBToken){
                 updatedToken = true
                 println(FBToken)
+                println(preferences.retrieveString("FBToken"))
             }
 
             if(updatedToken) {
-                if ((preferences.retrieveString("AccessToken") == null) || accessKeyHasTimedOut()) {
+                if (accessKeyHasTimedOut()) {
                     Toast.makeText(
                         this@MainActivity,
                         "Login to Rozie2 to update notification token.",
