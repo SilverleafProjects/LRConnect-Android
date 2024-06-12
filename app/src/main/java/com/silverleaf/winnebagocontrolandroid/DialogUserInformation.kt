@@ -68,10 +68,10 @@ class DialogUserInformation(activity: MainActivity, webView: WebView) : Dialog(a
     private fun createHTTPUserLoginMessage(email: String, password: String): String {
         var httpUserLoginMessage: JSONObject = JSONObject()
         httpUserLoginMessage.put("client_secret", "10kmr0bbckpr0c8tb7hmglmqgh270mte2b1nohk5ggi0boej94v9")
-//        httpUserLoginMessage.put("email"   ,    email)
-//        httpUserLoginMessage.put("password", password)
-        httpUserLoginMessage.put("email"   ,    "joshua@simply-smarter.com")
-        httpUserLoginMessage.put("password", "@1862Civilwar")
+        httpUserLoginMessage.put("email"   ,    email)
+        httpUserLoginMessage.put("password", password)
+//        httpUserLoginMessage.put("email"   ,    "joshua@simply-smarter.com")
+//        httpUserLoginMessage.put("password", "@1862Civilwar")
 
         return httpUserLoginMessage.toString()
     }
