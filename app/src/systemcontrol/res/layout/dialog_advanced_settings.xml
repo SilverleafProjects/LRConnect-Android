@@ -265,12 +265,20 @@
                                             android:text="Email Alerts" />
 
                                         <CheckBox
-                                            android:id="@+id/smsAlertCheckbox"
+                                            android:id="@+id/pushAlertCheckbox"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:layout_marginLeft="20dp"
                                             android:buttonTint="@color/text_color"
-                                            android:text="SMS Alerts" />
+                                            android:text="Push Alerts" />
+
+<!--                                        <CheckBox-->
+<!--                                            android:id="@+id/smsAlertCheckbox"-->
+<!--                                            android:layout_width="wrap_content"-->
+<!--                                            android:layout_height="wrap_content"-->
+<!--                                            android:layout_marginLeft="20dp"-->
+<!--                                            android:buttonTint="@color/text_color"-->
+<!--                                            android:text="SMS Alerts" />-->
 
                                         <Button
                                             android:id="@+id/Logout_Btn"
@@ -279,6 +287,15 @@
                                             android:layout_margin="15dp"
                                             android:background="@drawable/rounded_shape"
                                             android:text="Logout"
+                                            android:textColor="@color/white" />
+
+                                        <Button
+                                            android:id="@+id/ClearTokens_Btn"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="35dp"
+                                            android:layout_margin="15dp"
+                                            android:background="@drawable/rounded_shape"
+                                            android:text="Clear SNS Token"
                                             android:textColor="@color/white" />
 
                                 </LinearLayout>
