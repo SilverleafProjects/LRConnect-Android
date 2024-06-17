@@ -59,6 +59,8 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
     private var webView: WebView
     private var activity: MainActivity
 
+    private var alarmRetry = 2
+
     init {
         setCancelable(false)
         webView.also { this.webView = it }
@@ -148,10 +150,14 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
         findViewById<Button>(R.id.LoginBtn).setOnClickListener {
             activity.showDialogUserInformation()
+
+            this.cancel()
         };
 
         findViewById<Button>(R.id.Logout_Btn).setOnClickListener {
             activity.wineGardLogout()
+
+            this.cancel()
         };
 
         regBtn.setOnClickListener {
@@ -267,12 +273,21 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
         CoroutineScope(Dispatchers.IO).launch {
             MainActivity.client.newCall(getNotificationRequest).execute().use { response ->
-                if(!response.isSuccessful){
+                if(response.isSuccessful){
+                    extractNotificationType(JSONObject(response.body.string()).optJSONArray("data"))
+                }
+                else if(response.code == 404){
+                    if(alarmRetry > 0) {
+                        MainActivity.preferences.saveString("FBToken", "")
+                        activity.getFBToken()
+
+                        alarmRetry--
+                    }
+                }
+                else{
                     println("Response Unsuccessful: Code ${response.code}")
                     println("Response from Server: ${response.body.string()}")
                 }
-                else extractNotificationType(JSONObject(response.body.string()).optJSONArray("data"))
-
             }
         }
     }

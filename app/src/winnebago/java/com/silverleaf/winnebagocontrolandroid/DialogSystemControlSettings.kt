@@ -152,6 +152,8 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
         findViewById<Button>(R.id.Logout_Btn).setOnClickListener {
             activity.wineGardLogout()
+
+            this.cancel()
         };
 
         regBtn.setOnClickListener {
