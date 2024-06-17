@@ -225,11 +225,12 @@ class MainActivity : AppCompatActivity() {
     private fun createHttpUpdatePush() : String {
         var msg: JSONObject = JSONObject()
         msg.put("PushToken", FBToken)
+        msg.put("Platform", "android")
 
         return msg.toString()
     }
 
-    public fun updatePushNotifications(){
+    public fun updatePushToken(){
 
         MainActivity.broadcastMessageCoroutine.launch {
             try {
@@ -285,7 +286,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
-                    updatePushNotifications()
+                    updatePushToken()
                 }
             }
         }

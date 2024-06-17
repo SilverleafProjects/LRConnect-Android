@@ -43,8 +43,9 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
     private lateinit var CloudBtn: Button
 
-    private lateinit var smsCheckBox:   CheckBox
+    //    private lateinit var smsCheckBox:   CheckBox
     private lateinit var emailCheckBox: CheckBox
+    private lateinit var pushCheckbox: CheckBox
     private lateinit var rozieVersionSpinner: Spinner
     private lateinit var displaySpinner: Spinner
 
@@ -79,8 +80,9 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
         val widthDialog: Int = Resources.getSystem().displayMetrics.widthPixels * 9 / 10
         val heightDialog: Int = Resources.getSystem().displayMetrics.heightPixels * 9 / 10
 
-        smsCheckBox = findViewById<CheckBox>(R.id.smsAlertCheckbox)
+//        smsCheckBox = findViewById<CheckBox>(R.id.smsAlertCheckbox)
         emailCheckBox = findViewById<CheckBox>(R.id.emailAlertCheckbox)
+        pushCheckbox = findViewById<CheckBox>(R.id.pushAlertCheckbox)
         rozieVersionSpinner = findViewById<Spinner>(id.RozieVersionSpinner)
 
         yearSpinner = findViewById<Spinner>(id.VersionSpinner)
@@ -156,6 +158,12 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
             activity.registerToRozieCoreServices()
         };
 
+        findViewById<Button>(R.id.ClearTokens_Btn).setOnClickListener{
+            MainActivity.preferences.saveString("FBToken", "")
+            activity.getFBToken()
+        }
+
+
         var loggedOutTab = findViewById<LinearLayout>(R.id.CloudTabLoggedOut);
         var loggedInTab = findViewById<LinearLayout>(R.id.CloudTabLoggedIn);
 
@@ -217,27 +225,32 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
             GlobalScope.launch (Dispatchers.IO) {
                 withContext (Dispatchers.Main) {
-                    for(i in 0 until array.length()){
-                        var j = JSONObject(array[i].toString())
-                        if(j.get("notification_type") == "email"){
-                            MainActivity.preferences.saveBoolean("areEmailNotificationsActive", true)
-                            emailCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areEmailNotificationsActive")
-                            MainActivity.email_id = j.get("id").toString()
-                        }else MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
+                    try {
+                        for (i in 0 until array.length()) {
+                            var j = JSONObject(array[i].toString())
+                            if (j.get("notification_type") == "email") {
+                                MainActivity.preferences.saveBoolean("areEmailNotificationsActive", true)
+                                emailCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areEmailNotificationsActive")
+                                //MainActivity.email_id = j.get("id").toString()
+                            } else MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
 
-                        if(j.get("notification_type") == "sms"){
-                            MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
-                            println("${MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")}")
-                            smsCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")
-                            MainActivity.sms_id = j.get("id").toString()
-                        }else MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+//                        if(j.get("notification_type") == "sms"){
+//                            MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
+//                            smsCheckBox.isChecked = MainActivity.preferences.retrieveBoolean("areSMSNotificationsActive")
+////                            MainActivity.sms_id = j.get("id").toString()
+//                        }else MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
 
-                        if(j.get("notification_type") == "push"){
-                            MainActivity.preferences.saveBoolean("arePushNotificationsActive", true)
-                            MainActivity.push_id = j.get("id").toString()
-                        }else MainActivity.preferences.saveBoolean("arePushNotificationsActive", false)
+                            if (j.get("notification_type") == "push") {
+                                MainActivity.preferences.saveBoolean("arePushNotificationsActive", true)
+                                pushCheckbox.isChecked = MainActivity.preferences.retrieveBoolean("arePushNotificationsActive")
+//                            MainActivity.push_id = j.get("id").toString()
+                            } else MainActivity.preferences.saveBoolean("arePushNotificationsActive", false)
+                        }
+                        haveNotificationsBeenRecieved = true
                     }
-                    haveNotificationsBeenRecieved = true
+                    catch (e: Exception){
+                        println(e);
+                    }
                 }
             }
         }
@@ -245,10 +258,10 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 
     private fun getCurrentlyActiveNotifications(){
         val getNotificationRequest = Request.Builder()
-            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences")
+            .url("https://0ehkztwewg.execute-api.us-west-2.amazonaws.com/Alpha/PushNotifications/notification-preferences")
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardIdToken}")
             .get()
             .build()
 
@@ -269,13 +282,12 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
         val enableNotificationJSON = JSONObject().put("notification_type", notificationMsg).toString()
 
         val enableNotification = Request.Builder()
-            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences")
+            .url("https://0ehkztwewg.execute-api.us-west-2.amazonaws.com/Alpha/PushNotifications/notification-preferences")
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardIdToken}")
             .post(enableNotificationJSON.toRequestBody("application/json; charset=utf-8".toMediaType()))
             .build()
-        /*.toRequestBody("application/json; charset=utf-8".toMediaType())*/
         MainActivity.client.newCall(enableNotification).execute().use { response ->
             if(!response.isSuccessful){
                 println("Response Unsuccessful: Error Code ${response.code}")
@@ -288,10 +300,10 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
         val enableNotificationJSON = JSONObject().put("notification_type", notificationMsg).toString()
 
         val disableNotification = Request.Builder()
-            .url("https://identity.winegard-staging.io/api/v1/users/notification-preferences/${notificationMsg}")
+            .url("https://0ehkztwewg.execute-api.us-west-2.amazonaws.com/Alpha/PushNotifications/notification-preferences/?notification_type=${notificationMsg}")
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer ${MainActivity.winegardAccessToken}")
+            .addHeader("Authorization", "Bearer ${MainActivity.winegardIdToken}")
             .delete(enableNotificationJSON.toRequestBody("application/json; charset=utf-8".toMediaType()))
             .build()
 
@@ -382,7 +394,6 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
     private fun bindUI() {
 
         val coachModels = activity.resources.getStringArray(array.CoachNames)
-
 
         updateRozieService()
 
@@ -554,18 +565,18 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
 //            }
         }
 
-        smsCheckBox.setOnClickListener{
-            CoroutineScope(Dispatchers.IO).launch {
-                if (smsCheckBox.isChecked) {
-                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
-                    enableNotificationType("sms")
-                } else {
-                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
-                    disableNotificationType("sms")
-                }
-                //  getCurrentlyActiveNotifications()
-            }
-        }
+//        smsCheckBox.setOnClickListener{
+//            CoroutineScope(Dispatchers.IO).launch {
+//                if (smsCheckBox.isChecked) {
+//                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", true)
+//                    enableNotificationType("sms")
+//                } else {
+//                    MainActivity.preferences.saveBoolean("areSMSNotificationsActive", false)
+//                    disableNotificationType("sms")
+//                }
+//              //  getCurrentlyActiveNotifications()
+//            }
+//        }
 
         emailCheckBox.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
@@ -575,6 +586,19 @@ class DialogSystemControlSettings(activity: Activity, webView: WebView): Dialog(
                 } else {
                     MainActivity.preferences.saveBoolean("areEmailNotificationsActive", false)
                     disableNotificationType("email")
+                }
+                //  getCurrentlyActiveNotifications()
+            }
+        }
+
+        pushCheckbox.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                if(pushCheckbox.isChecked) {
+                    MainActivity.preferences.saveBoolean("arePushNotificationsActive", true)
+                    enableNotificationType("push")
+                } else {
+                    MainActivity.preferences.saveBoolean("arePushNotificationsActive", false)
+                    disableNotificationType("push")
                 }
                 //  getCurrentlyActiveNotifications()
             }

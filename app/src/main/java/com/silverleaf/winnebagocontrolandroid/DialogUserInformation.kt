@@ -137,7 +137,7 @@ class DialogUserInformation(activity: MainActivity, webView: WebView) : Dialog(a
 
                         if(MainActivity.updatedToken){
                             connectionFailureCount = 0
-                            activity.updatePushNotifications()
+                            activity.updatePushToken()
                         }
                     }
 
