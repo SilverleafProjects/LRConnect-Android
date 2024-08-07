@@ -32,7 +32,10 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
                 }
 
                 counter++
-                setMessageText(counter)
+
+                activity.runOnUiThread {
+                    setMessageText(counter)
+                }
                 delay(600)
 
             }
@@ -68,12 +71,14 @@ class DialogNetworkScanInProgress(activity: Activity): Dialog(activity) {
         val baseText = activity.resources.getText(R.string.text_view_dialog_network_scan_in_progress_message)
         var dots = counter % 4
         var messageText = baseText
+
         while(dots > 0) {
             messageText = "$messageText ."
             dots--
         }
 
-        textViewDialogNetworkScanInProgressMessage.text = messageText
+        if(textViewDialogNetworkScanInProgressMessage != null)
+            textViewDialogNetworkScanInProgressMessage.text = messageText
 
     }
 
